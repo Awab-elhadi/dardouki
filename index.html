@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="DARDOUKI" />
-  <title>DARDOUKI</title>
+  <title>DARDOUKI - كرة القدم</title>
   <link id="pwaManifestLink" rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22DARDOUKI%22%2C%22short_name%22%3A%22DARDOUKI%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f1f5f9%22%2C%22theme_color%22%3A%22%23f59e0b%22%7D" />
   <style>
     :root {
@@ -20,43 +20,38 @@
       --acc-dark: #78350f;
       --grn: #16a34a;
       --red: #dc2626;
+      --soft: #f8fafc;
     }
 
     * { box-sizing: border-box; }
 
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--txt);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 28px;
     }
 
-    .app-shell {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      height: 100%;
-    }
+    a { color: inherit; }
 
     header {
       background: var(--card);
       border-bottom: 1px solid var(--line);
-      padding: 8px 12px;
+      padding: 10px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      flex-shrink: 0;
-      z-index: 20;
+      position: sticky;
+      top: 0;
+      z-index: 30;
     }
 
     .brand {
       font-weight: 900;
-      font-size: 16px;
+      font-size: 18px;
       color: var(--txt);
       display: flex;
       align-items: center;
@@ -66,7 +61,7 @@
     .brand span {
       background: var(--acc);
       color: #ffffff;
-      padding: 2px 7px;
+      padding: 2px 8px;
       border-radius: 6px;
     }
 
@@ -74,13 +69,14 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      flex-wrap: wrap;
     }
 
     .sync {
-      font-size: 10px;
+      font-size: 11px;
       background: #fef3c7;
       color: var(--acc-dark);
-      padding: 4px 8px;
+      padding: 4px 9px;
       border-radius: 99px;
       font-weight: 800;
       white-space: nowrap;
@@ -91,131 +87,409 @@
       color: var(--red);
     }
 
-    .btn-mini {
-      background: var(--txt);
-      color: #ffffff;
-      border: none;
-      padding: 5px 9px;
-      border-radius: 7px;
-      font-size: 11px;
-      font-weight: 800;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
     .install-btn {
       background: var(--acc);
       color: #ffffff;
       border: none;
-      padding: 5px 9px;
-      border-radius: 7px;
+      padding: 5px 10px;
+      border-radius: 8px;
       font-size: 11px;
       font-weight: 900;
       cursor: pointer;
       display: none;
+    }
+
+    .wrap {
+      max-width: 920px;
+      margin: auto;
+      padding: 10px;
+    }
+
+    .bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      background: var(--card);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+
+    .title-lbl {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .btn {
+      background: var(--txt);
+      color: #ffffff;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-sec {
+      background: var(--soft);
+      color: var(--txt);
+      border: 1px solid var(--line);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+      scrollbar-width: thin;
+    }
+
+    .tab-btn {
+      background: var(--card);
+      color: var(--txt);
+      border: 1px solid var(--line);
+      padding: 8px 12px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .tab-btn.active {
+      background: var(--txt);
+      color: #ffffff;
+      border-color: var(--txt);
+    }
+
+    .msg {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: var(--acc-dark);
+      padding: 9px 11px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 10px;
+      display: none;
+      font-weight: 700;
+    }
+
+    .msg.err {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: var(--red);
+    }
+
+    .loading-box {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 18px 14px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .box {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .box-h {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-weight: 900;
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+
+    .row {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 105px 1fr auto 1fr 92px;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .row:last-child { border-bottom: none; }
+
+    .st {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .st.live { color: var(--grn); }
+
+    .tm {
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .tm.home {
+      justify-content: flex-end;
+      text-align: right;
+    }
+
+    .tm.away {
+      justify-content: flex-start;
+      text-align: left;
+    }
+
+    .logo-img {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .logo-lg {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+    }
+
+    .sc {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 900;
+      min-width: 60px;
+      text-align: center;
       white-space: nowrap;
     }
 
-    .stage {
-      position: relative;
-      flex: 1;
-      width: 100%;
-      height: 100%;
-      background: var(--card);
-    }
-
-    iframe#sportscoreFrame {
-      width: 100%;
-      height: 100%;
+    .act-btn {
+      background: var(--grn);
+      color: #ffffff;
       border: none;
-      display: block;
-      background: var(--card);
-    }
-
-    .overlay-msg {
-      position: absolute;
-      inset: 0;
-      background: var(--bg);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
+      padding: 6px 10px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
       text-align: center;
-      z-index: 10;
-    }
-
-    .overlay-card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 18px 16px;
-      max-width: 380px;
       width: 100%;
     }
 
-    .overlay-title {
-      font-size: 14px;
-      font-weight: 900;
-      margin-bottom: 6px;
+    .empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
     }
 
-    .overlay-desc {
+    .tbl-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
       font-size: 12px;
+    }
+
+    th, td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th {
+      background: var(--soft);
+      font-weight: 900;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .clickable-row { cursor: pointer; }
+    .clickable-row:hover td { background: var(--soft); }
+
+    .league-item, .player-lookup-card, .detail-card {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .league-item:last-child, .player-lookup-card:last-child, .detail-card:last-child {
+      border-bottom: none;
+    }
+
+    .league-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .league-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .slug-tag {
+      font-size: 10px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 2px 7px;
+      border-radius: 6px;
+      color: var(--muted);
+      direction: ltr;
+      display: inline-block;
+    }
+
+    .lookup-form {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .inp {
+      flex: 1;
+      min-width: 180px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12px;
+      background: var(--card);
+      color: var(--txt);
+    }
+
+    .kv-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .kv {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .kv-k {
+      font-size: 10px;
       color: var(--muted);
       font-weight: 700;
-      margin-bottom: 12px;
-      line-height: 1.5;
+    }
+
+    .kv-v {
+      font-size: 13px;
+      font-weight: 900;
+      margin-top: 2px;
+      word-break: break-word;
     }
 
     footer.credit {
+      margin-top: 14px;
       background: var(--card);
-      border-top: 1px solid var(--line);
-      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
       text-align: center;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 800;
-      flex-shrink: 0;
     }
 
     footer.credit a {
       color: var(--acc-dark);
       text-decoration: none;
     }
+
+    @media (max-width: 640px) {
+      .row {
+        grid-template-columns: 78px 1fr auto 1fr 78px;
+        gap: 5px;
+        padding: 9px 8px;
+      }
+      .tm { font-size: 11px; }
+      .logo-img { width: 18px; height: 18px; }
+    }
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <header>
-      <div class="brand">⚡ <span>DARDOUKI</span></div>
-      <div class="hdr-actions">
-        <button type="button" class="install-btn" id="installPwaBtn">تثبيت</button>
-        <div class="sync" id="syncBadge">تحديث كل 90 ث</div>
-        <button type="button" class="btn-mini" onclick="reloadSportScoreView()">تحديث</button>
-      </div>
-    </header>
-
-    <div class="stage">
-      <div class="overlay-msg" id="fallbackOverlay">
-        <div class="overlay-card">
-          <div class="overlay-title" id="overlayTitle">تعذر عرض واجهة SportScore مباشرة</div>
-          <div class="overlay-desc" id="overlayDesc">
-            قد يمنع المتصفح تضمين الموقع داخل إطار، أو يوجد انقطاع في الاتصال. يمكنك فتحه مباشرة أو إعادة المحاولة.
-          </div>
-          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-            <button type="button" class="btn-mini" onclick="reloadSportScoreView()">إعادة المحاولة</button>
-            <a class="btn-mini" style="background:var(--grn);text-decoration:none" href="https://sportscore.com/" target="_blank" rel="noopener noreferrer">فتح SportScore</a>
-          </div>
-        </div>
-      </div>
-
-      <iframe
-        id="sportscoreFrame"
-        src="https://sportscore.com/"
-        title="DARDOUKI - SportScore"
-        allow="fullscreen"
-        referrerpolicy="no-referrer-when-downgrade"
-      ></iframe>
+  <header>
+    <div class="brand">⚡ <span>DARDOUKI</span></div>
+    <div class="hdr-actions">
+      <button type="button" class="install-btn" id="installPwaBtn">تثبيت التطبيق</button>
+      <div class="sync" id="syncBadge">تحديث كل 90 ث</div>
     </div>
+  </header>
+
+  <div class="wrap">
+    <div class="bar">
+      <div class="title-lbl" id="sectionTitle">الرئيسية</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <span id="todayIso" style="font-size:11px;color:#64748b;font-weight:800"></span>
+        <a class="btn-sec" href="https://sportscore.com/football" target="_blank" rel="noopener noreferrer">فتح الموقع</a>
+        <button type="button" class="btn" id="refreshBtn" onclick="manualRefresh()">تحديث الآن</button>
+      </div>
+    </div>
+
+    <div class="nav-tabs" role="tablist" aria-label="أقسام DARDOUKI">
+      <button type="button" class="tab-btn active" data-tab="home" onclick="switchTab('home')">الرئيسية</button>
+      <button type="button" class="tab-btn" data-tab="live" onclick="switchTab('live')">المباريات المباشرة</button>
+      <button type="button" class="tab-btn" data-tab="today" onclick="switchTab('today')">مباريات اليوم</button>
+      <button type="button" class="tab-btn" data-tab="upcoming" onclick="switchTab('upcoming')">المباريات القادمة</button>
+      <button type="button" class="tab-btn" data-tab="results" onclick="switchTab('results')">النتائج السابقة</button>
+      <button type="button" class="tab-btn" data-tab="leagues" onclick="switchTab('leagues')">جميع الدوريات المتاحة</button>
+      <button type="button" class="tab-btn" data-tab="standings" onclick="switchTab('standings')">ترتيب الفرق</button>
+      <button type="button" class="tab-btn" data-tab="scorers" onclick="switchTab('scorers')">الهدافون</button>
+      <button type="button" class="tab-btn" data-tab="match" onclick="switchTab('match')">تفاصيل المباريات</button>
+      <button type="button" class="tab-btn" data-tab="entity" onclick="switchTab('entity')">صفحات الفرق واللاعبين</button>
+    </div>
+
+    <div class="msg" id="msgBox"></div>
+    <div class="loading-box" id="loadingBox">جاري تحميل البيانات من SportScore...</div>
+    <div id="appContent"></div>
 
     <footer class="credit">
       Powered by <a href="https://sportscore.com/" target="_blank" rel="noopener noreferrer">SportScore</a>
@@ -224,51 +498,888 @@
 
   <script>
     (function () {
-      var TARGET_URL = 'https://sportscore.com/';
+      var BASE_URL = 'https://sportscore.com';
       var AUTO_SYNC_MS = 90000;
-      var frame = document.getElementById('sportscoreFrame');
-      var overlay = document.getElementById('fallbackOverlay');
-      var badge = document.getElementById('syncBadge');
+      var CACHE_TTL_MS = 85000;
+      var REQUEST_TIMEOUT_MS = 14000;
+      var VERIFIED_LA_LIGA_SLUG = 'spanish-la-liga';
+
+      var state = {
+        activeTab: 'home',
+        matches: [],
+        standings: null,
+        scorers: null,
+        matchDetail: null,
+        selectedMatchSlug: '',
+        teamData: null,
+        selectedTeamSlug: '',
+        playerData: null,
+        selectedPlayerSlug: '',
+        selectedLeagueSlug: VERIFIED_LA_LIGA_SLUG,
+        isLoading: false,
+        lastUpdatedAt: 0,
+        lastError: ''
+      };
+
+      var memCache = new Map();
+      var inflightMap = new Map();
       var deferredInstallPrompt = null;
 
-      function setBadge(text, isError) {
+      function getTodayIso() {
+        var d = new Date();
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+      }
+
+      function escapeHtml(val) {
+        if (val === null || val === undefined) return '';
+        return String(val)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function sanitizeLogoUrl(url) {
+        if (!url || typeof url !== 'string') return '';
+        var trimmed = url.trim();
+        if (trimmed.indexOf('https://') === 0 || trimmed.indexOf('http://') === 0) {
+          return trimmed;
+        }
+        return '';
+      }
+
+      function renderLogoHtml(url, altText, isLarge) {
+        var safeUrl = sanitizeLogoUrl(url);
+        if (!safeUrl) return '';
+        var cls = isLarge ? 'logo-lg' : 'logo-img';
+        return '<img class="' + cls + '" src="' + escapeHtml(safeUrl) + '" alt="' + escapeHtml(altText || '') + '" loading="lazy" onerror="this.style.display=\'none\'" />';
+      }
+
+      function setNotice(text, isError) {
+        var box = document.getElementById('msgBox');
+        if (!text) {
+          box.style.display = 'none';
+          box.textContent = '';
+          box.className = 'msg';
+          return;
+        }
+        box.style.display = 'block';
+        box.textContent = text;
+        box.className = isError ? 'msg err' : 'msg';
+      }
+
+      function setLoading(show, label) {
+        state.isLoading = !!show;
+        var box = document.getElementById('loadingBox');
+        var btn = document.getElementById('refreshBtn');
+        box.style.display = show ? 'block' : 'none';
+        if (label) box.textContent = label;
+        if (btn) btn.disabled = !!show;
+      }
+
+      function setSyncBadge(text, isError) {
+        var badge = document.getElementById('syncBadge');
         badge.textContent = text;
         badge.className = isError ? 'sync err' : 'sync';
       }
 
-      window.reloadSportScoreView = function () {
-        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-          setBadge('بدون إنترنت', true);
-          document.getElementById('overlayTitle').textContent = 'لا يوجد اتصال بالإنترنت';
-          document.getElementById('overlayDesc').textContent = 'تحقق من اتصالك بالشبكة ثم اضغط إعادة المحاولة.';
-          overlay.style.display = 'flex';
-          return;
+      function readCache(key, allowExpired) {
+        var now = Date.now();
+        var item = memCache.get(key);
+        if (item && (allowExpired || (now - item.ts) < CACHE_TTL_MS)) {
+          return item.data;
         }
-        overlay.style.display = 'none';
-        setBadge('جاري التحديث...', false);
-        frame.src = TARGET_URL + (TARGET_URL.indexOf('?') === -1 ? '?_t=' : '&_t=') + Date.now();
+        try {
+          var raw = localStorage.getItem('dardouki_cache:' + key);
+          if (!raw) return null;
+          var parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed.ts !== 'number') return null;
+          if (allowExpired || (now - parsed.ts) < CACHE_TTL_MS) {
+            memCache.set(key, parsed);
+            return parsed.data;
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      function writeCache(key, data) {
+        var entry = { ts: Date.now(), data: data };
+        memCache.set(key, entry);
+        try {
+          localStorage.setItem('dardouki_cache:' + key, JSON.stringify(entry));
+        } catch (e) {}
+      }
+
+      function apiGet(endpointPath, forceRefresh) {
+        var fullUrl = BASE_URL + endpointPath;
+        if (!forceRefresh) {
+          var cached = readCache(fullUrl, false);
+          if (cached !== null) {
+            return Promise.resolve(cached);
+          }
+        }
+        if (inflightMap.has(fullUrl)) {
+          return inflightMap.get(fullUrl);
+        }
+
+        var promise = new Promise(function (resolve, reject) {
+          if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+            var stale = readCache(fullUrl, true);
+            if (stale !== null) {
+              resolve(stale);
+              return;
+            }
+            reject(new Error('OFFLINE'));
+            return;
+          }
+
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', fullUrl, true);
+          xhr.timeout = REQUEST_TIMEOUT_MS;
+          xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+              try {
+                var json = JSON.parse(xhr.responseText);
+                writeCache(fullUrl, json);
+                resolve(json);
+              } catch (err) {
+                reject(new Error('PARSE_ERROR'));
+              }
+            } else {
+              reject(new Error('HTTP_' + xhr.status));
+            }
+          };
+          xhr.ontimeout = function () {
+            reject(new Error('TIMEOUT'));
+          };
+          xhr.onerror = function () {
+            reject(new Error('NETWORK_ERROR'));
+          };
+          xhr.send();
+        }).finally(function () {
+          inflightMap.delete(fullUrl);
+        });
+
+        inflightMap.set(fullUrl, promise);
+        return promise;
+      }
+
+      function extractListFromPayload(payload) {
+        if (!payload) return [];
+        if (Array.isArray(payload)) return payload;
+        if (Array.isArray(payload.data)) return payload.data;
+        if (Array.isArray(payload.matches)) return payload.matches;
+        if (Array.isArray(payload.events)) return payload.events;
+        if (Array.isArray(payload.results)) return payload.results;
+        return [];
+      }
+
+      function getEntityName(obj, fallback) {
+        if (!obj) return fallback || '';
+        if (typeof obj === 'string') return obj;
+        return obj.name || obj.title || obj.short_name || obj.full_name || fallback || '';
+      }
+
+      function getEntitySlug(obj) {
+        if (!obj || typeof obj !== 'object') return '';
+        return obj.slug || obj.id || '';
+      }
+
+      function normalizeMatch(raw) {
+        var m = raw || {};
+        var homeObj = m.home_team || m.home || {};
+        var awayObj = m.away_team || m.away || {};
+        var compObj = m.competition || m.league || m.tournament || {};
+
+        var homeName = getEntityName(homeObj, m.home_team_name || m.home_name || '');
+        var awayName = getEntityName(awayObj, m.away_team_name || m.away_name || '');
+        var homeSlug = m.home_team_slug || getEntitySlug(homeObj) || '';
+        var awaySlug = m.away_team_slug || getEntitySlug(awayObj) || '';
+        var matchSlug = m.slug || m.match_slug || m.id || '';
+
+        var homeLogo = sanitizeLogoUrl(
+          m.home_logo || homeObj.logo || homeObj.team_logo || homeObj.image || ''
+        );
+        var awayLogo = sanitizeLogoUrl(
+          m.away_logo || awayObj.logo || awayObj.team_logo || awayObj.image || ''
+        );
+        var compLogo = sanitizeLogoUrl(
+          m.competition_logo || compObj.logo || compObj.competition_logo || compObj.image || ''
+        );
+
+        var compName = getEntityName(compObj, m.competition_name || m.league_name || '');
+        var compSlug = m.competition_slug || getEntitySlug(compObj) || '';
+
+        var statusRaw = String(m.status || m.status_type || m.match_status || m.state || '').trim();
+        var stLower = statusRaw.toLowerCase();
+
+        var isLive =
+          m.is_live === true ||
+          stLower === 'live' ||
+          stLower === 'inprogress' ||
+          stLower === 'in_progress' ||
+          stLower === '1h' ||
+          stLower === '2h' ||
+          stLower === 'ht' ||
+          stLower === 'extra_time';
+
+        var isFinished =
+          stLower === 'finished' ||
+          stLower === 'ft' ||
+          stLower === 'ended' ||
+          stLower === 'completed' ||
+          stLower === 'after_penalties' ||
+          stLower === 'aet';
+
+        var rawDate = String(m.start_at || m.date || m.start_time || m.utc_date || m.timestamp || '');
+        var datePart = '';
+        var timePart = '';
+        if (rawDate) {
+          var parsedDate = new Date(rawDate);
+          if (!isNaN(parsedDate.getTime())) {
+            var py = parsedDate.getFullYear();
+            var pm = String(parsedDate.getMonth() + 1).padStart(2, '0');
+            var pd = String(parsedDate.getDate()).padStart(2, '0');
+            datePart = py + '-' + pm + '-' + pd;
+            timePart = String(parsedDate.getHours()).padStart(2, '0') + ':' + String(parsedDate.getMinutes()).padStart(2, '0');
+          } else {
+            datePart = rawDate.slice(0, 10);
+            timePart = rawDate.slice(11, 16);
+          }
+        }
+
+        var homeScore =
+          m.home_score !== undefined && m.home_score !== null && m.home_score !== ''
+            ? m.home_score
+            : (homeObj.score !== undefined && homeObj.score !== null ? homeObj.score : '');
+        var awayScore =
+          m.away_score !== undefined && m.away_score !== null && m.away_score !== ''
+            ? m.away_score
+            : (awayObj.score !== undefined && awayObj.score !== null ? awayObj.score : '');
+
+        var hasScore = homeScore !== '' && awayScore !== '';
+        var scoreText = hasScore ? (homeScore + ' - ' + awayScore) : (timePart || 'vs');
+
+        var statusLabel = statusRaw || (isLive ? 'مباشر' : (isFinished ? 'انتهت' : (timePart ? ('مجدولة • ' + timePart) : 'مجدولة')));
+        if (isLive && m.minute) {
+          statusLabel = statusLabel + ' • ' + m.minute + "'";
+        }
+
+        return {
+          slug: String(matchSlug || ''),
+          homeName: String(homeName || ''),
+          awayName: String(awayName || ''),
+          homeSlug: String(homeSlug || ''),
+          awaySlug: String(awaySlug || ''),
+          homeLogo: homeLogo,
+          awayLogo: awayLogo,
+          compName: String(compName || ''),
+          compSlug: String(compSlug || ''),
+          compLogo: compLogo,
+          datePart: datePart,
+          timePart: timePart,
+          statusLabel: statusLabel,
+          isLive: isLive,
+          isFinished: isFinished,
+          hasScore: hasScore,
+          scoreText: scoreText,
+          raw: m
+        };
+      }
+
+      function loadMatches(forceRefresh) {
+        return apiGet('/api/widget/matches/?sport=football&limit=50', forceRefresh).then(function (payload) {
+          var rawList = extractListFromPayload(payload);
+          var normalized = [];
+          for (var i = 0; i < rawList.length; i++) {
+            var item = normalizeMatch(rawList[i]);
+            if (item.homeName || item.awayName) {
+              normalized.push(item);
+            }
+          }
+          state.matches = normalized;
+          state.lastUpdatedAt = Date.now();
+          state.lastError = '';
+          return normalized;
+        });
+      }
+
+      function loadStandings(slug, forceRefresh) {
+        var targetSlug = slug || VERIFIED_LA_LIGA_SLUG;
+        return apiGet('/api/widget/standings/?sport=football&slug=' + encodeURIComponent(targetSlug), forceRefresh).then(function (payload) {
+          state.standings = payload;
+          state.selectedLeagueSlug = targetSlug;
+          return payload;
+        });
+      }
+
+      function loadScorers(slug, forceRefresh) {
+        var targetSlug = slug || VERIFIED_LA_LIGA_SLUG;
+        return apiGet('/api/widget/topscorers/?sport=football&slug=' + encodeURIComponent(targetSlug) + '&limit=20', forceRefresh).then(function (payload) {
+          state.scorers = payload;
+          state.selectedLeagueSlug = targetSlug;
+          return payload;
+        });
+      }
+
+      function loadMatchDetail(slug, forceRefresh) {
+        if (!slug) {
+          return Promise.reject(new Error('MISSING_MATCH_SLUG'));
+        }
+        state.selectedMatchSlug = slug;
+        return apiGet('/api/widget/match/?sport=football&slug=' + encodeURIComponent(slug), forceRefresh).then(function (payload) {
+          state.matchDetail = payload;
+          return payload;
+        });
+      }
+
+      function loadTeam(slug, forceRefresh) {
+        if (!slug) {
+          return Promise.reject(new Error('MISSING_TEAM_SLUG'));
+        }
+        state.selectedTeamSlug = slug;
+        return apiGet('/api/widget/team/?sport=football&slug=' + encodeURIComponent(slug) + '&limit=30', forceRefresh).then(function (payload) {
+          state.teamData = payload;
+          return payload;
+        });
+      }
+
+      function loadPlayer(slug, forceRefresh) {
+        if (!slug) {
+          return Promise.reject(new Error('MISSING_PLAYER_SLUG'));
+        }
+        state.selectedPlayerSlug = slug;
+        return apiGet('/api/widget/player/?sport=football&slug=' + encodeURIComponent(slug), forceRefresh).then(function (payload) {
+          state.playerData = payload;
+          return payload;
+        });
+      }
+
+      function syncCurrentTab(forceRefresh, isBackground) {
+        var tab = state.activeTab;
+        if (!isBackground) {
+          setLoading(true, 'جاري تحديث البيانات...');
+          setNotice('', false);
+        }
+        setSyncBadge(isBackground ? 'تحديث تلقائي...' : 'جاري التحديث...', false);
+
+        var tasks = [];
+        if (tab === 'home' || tab === 'live' || tab === 'today' || tab === 'upcoming' || tab === 'results' || tab === 'leagues') {
+          tasks.push(loadMatches(forceRefresh));
+        }
+        if (tab === 'home' || tab === 'standings') {
+          tasks.push(loadStandings(VERIFIED_LA_LIGA_SLUG, forceRefresh));
+        }
+        if (tab === 'home' || tab === 'scorers') {
+          tasks.push(loadScorers(VERIFIED_LA_LIGA_SLUG, forceRefresh));
+        }
+        if (tab === 'match' && state.selectedMatchSlug) {
+          tasks.push(loadMatchDetail(state.selectedMatchSlug, forceRefresh));
+        }
+        if (tab === 'entity' && state.selectedTeamSlug) {
+          tasks.push(loadTeam(state.selectedTeamSlug, forceRefresh));
+        }
+        if (tab === 'entity' && state.selectedPlayerSlug) {
+          tasks.push(loadPlayer(state.selectedPlayerSlug, forceRefresh));
+        }
+
+        Promise.allSettled(tasks).then(function (results) {
+          setLoading(false);
+          var anyRejected = false;
+          var firstErr = '';
+          for (var i = 0; i < results.length; i++) {
+            if (results[i].status === 'rejected') {
+              anyRejected = true;
+              if (!firstErr) {
+                firstErr = (results[i].reason && results[i].reason.message) || 'NETWORK_ERROR';
+              }
+            }
+          }
+
+          if (anyRejected) {
+            state.lastError = firstErr;
+            setSyncBadge(firstErr === 'OFFLINE' ? 'بدون إنترنت' : 'تعذر التحديث', true);
+            setNotice('تعذر جلب بعض البيانات من SportScore (' + firstErr + '). سيتم إعادة المحاولة تلقائياً كل 90 ثانية.', true);
+          } else {
+            state.lastError = '';
+            setSyncBadge('محدّث • كل 90 ث', false);
+            setNotice('', false);
+          }
+
+          render();
+        });
+      }
+
+      window.manualRefresh = function () {
+        syncCurrentTab(true, false);
       };
 
-      frame.addEventListener('load', function () {
-        overlay.style.display = 'none';
-        setBadge('محدّث • كل 90 ث', false);
-      });
+      window.switchTab = function (tabName) {
+        state.activeTab = tabName;
+        var btns = document.querySelectorAll('.tab-btn');
+        for (var i = 0; i < btns.length; i++) {
+          var b = btns[i];
+          if (b.getAttribute('data-tab') === tabName) {
+            b.classList.add('active');
+          } else {
+            b.classList.remove('active');
+          }
+        }
+        var labels = {
+          home: 'الرئيسية',
+          live: 'المباريات المباشرة',
+          today: 'مباريات اليوم',
+          upcoming: 'المباريات القادمة',
+          results: 'النتائج السابقة',
+          leagues: 'جميع الدوريات المتاحة',
+          standings: 'ترتيب الفرق',
+          scorers: 'الهدافون',
+          match: 'تفاصيل المباريات',
+          entity: 'صفحات الفرق واللاعبين'
+        };
+        document.getElementById('sectionTitle').textContent = labels[tabName] || 'الرئيسية';
+        render();
+        syncCurrentTab(false, false);
+      };
 
-      frame.addEventListener('error', function () {
-        setBadge('تعذر التحميل', true);
-        overlay.style.display = 'flex';
-      });
+      window.openMatchDetail = function (slug) {
+        if (!slug) {
+          state.activeTab = 'match';
+          render();
+          setNotice('معرّف المباراة غير متوفر في هذه الاستجابة.', false);
+          return;
+        }
+        state.activeTab = 'match';
+        state.selectedMatchSlug = slug;
+        var btns = document.querySelectorAll('.tab-btn');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].classList.toggle('active', btns[i].getAttribute('data-tab') === 'match');
+        }
+        document.getElementById('sectionTitle').textContent = 'تفاصيل المباريات';
+        setLoading(true, 'جاري تحميل تفاصيل المباراة...');
+        loadMatchDetail(slug, false)
+          .then(function () {
+            setLoading(false);
+            setNotice('', false);
+            render();
+          })
+          .catch(function (err) {
+            setLoading(false);
+            setNotice('تعذر تحميل تفاصيل المباراة (' + (err.message || 'ERROR') + ').', true);
+            render();
+          });
+      };
 
-      window.addEventListener('online', function () {
-        reloadSportScoreView();
-      });
+      window.openTeamPage = function (slug) {
+        if (!slug) {
+          setNotice('معرّف الفريق غير متوفر في البيانات الحالية.', false);
+          return;
+        }
+        state.activeTab = 'entity';
+        state.selectedTeamSlug = slug;
+        var btns = document.querySelectorAll('.tab-btn');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].classList.toggle('active', btns[i].getAttribute('data-tab') === 'entity');
+        }
+        document.getElementById('sectionTitle').textContent = 'صفحات الفرق واللاعبين';
+        setLoading(true, 'جاري تحميل بيانات الفريق...');
+        loadTeam(slug, false)
+          .then(function () {
+            setLoading(false);
+            setNotice('', false);
+            render();
+          })
+          .catch(function (err) {
+            setLoading(false);
+            setNotice('تعذر تحميل بيانات الفريق (' + (err.message || 'ERROR') + ').', true);
+            render();
+          });
+      };
 
-      window.addEventListener('offline', function () {
-        setBadge('بدون إنترنت', true);
-        document.getElementById('overlayTitle').textContent = 'لا يوجد اتصال بالإنترنت';
-        document.getElementById('overlayDesc').textContent = 'تم فقدان الاتصال بالشبكة حالياً.';
-        overlay.style.display = 'flex';
-      });
+      window.submitTeamLookup = function (ev) {
+        ev.preventDefault();
+        var inp = document.getElementById('teamSlugInput');
+        var slug = inp ? inp.value.trim() : '';
+        if (!slug) {
+          setNotice('أدخل معرّف الفريق (TEAM_SLUG) أولاً.', false);
+          return;
+        }
+        openTeamPage(slug);
+      };
+
+      window.submitPlayerLookup = function (ev) {
+        ev.preventDefault();
+        var inp = document.getElementById('playerSlugInput');
+        var slug = inp ? inp.value.trim() : '';
+        if (!slug) {
+          setNotice('أدخل معرّف اللاعب (PLAYER_SLUG) أولاً.', false);
+          return;
+        }
+        state.selectedPlayerSlug = slug;
+        setLoading(true, 'جاري تحميل إحصائيات اللاعب...');
+        loadPlayer(slug, false)
+          .then(function () {
+            setLoading(false);
+            setNotice('', false);
+            render();
+          })
+          .catch(function (err) {
+            setLoading(false);
+            setNotice('تعذر تحميل إحصائيات اللاعب (' + (err.message || 'ERROR') + ').', true);
+            render();
+          });
+      };
+
+      window.openLeagueStandings = function (slug) {
+        var target = slug || VERIFIED_LA_LIGA_SLUG;
+        state.activeTab = 'standings';
+        var btns = document.querySelectorAll('.tab-btn');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].classList.toggle('active', btns[i].getAttribute('data-tab') === 'standings');
+        }
+        document.getElementById('sectionTitle').textContent = 'ترتيب الفرق';
+        setLoading(true, 'جاري تحميل ترتيب البطولة...');
+        loadStandings(target, false)
+          .then(function () {
+            setLoading(false);
+            setNotice('', false);
+            render();
+          })
+          .catch(function (err) {
+            setLoading(false);
+            setNotice('تعذر تحميل ترتيب البطولة (' + (err.message || 'ERROR') + ').', true);
+            render();
+          });
+      };
+
+      function filterMatchesByMode(mode) {
+        var today = getTodayIso();
+        var list = state.matches || [];
+        if (mode === 'live') {
+          return list.filter(function (m) { return m.isLive; });
+        }
+        if (mode === 'today') {
+          return list.filter(function (m) { return m.datePart === today; });
+        }
+        if (mode === 'upcoming') {
+          return list.filter(function (m) {
+            if (m.isLive || m.isFinished) return false;
+            if (m.datePart && today) return m.datePart >= today;
+            return !m.hasScore;
+          });
+        }
+        if (mode === 'results') {
+          return list.filter(function (m) {
+            if (m.isFinished) return true;
+            if (m.datePart && today && m.datePart < today) return true;
+            return !m.isLive && m.hasScore;
+          });
+        }
+        return list;
+      }
+
+      function renderMatchesBox(title, list, emptyText) {
+        var html = '<div class="box"><div class="box-h"><span>' + escapeHtml(title) + '</span><span>' + list.length + '</span></div>';
+        if (!list.length) {
+          html += '<div class="empty">' + escapeHtml(emptyText || 'لا توجد بيانات متاحة حالياً.') + '</div></div>';
+          return html;
+        }
+        for (var i = 0; i < list.length; i++) {
+          var m = list[i];
+          var subLine = [m.compName, m.datePart].filter(Boolean).join(' • ');
+          var homeClick = m.homeSlug ? ' onclick="openTeamPage(\'' + escapeHtml(m.homeSlug) + '\')"' : '';
+          var awayClick = m.awaySlug ? ' onclick="openTeamPage(\'' + escapeHtml(m.awaySlug) + '\')"' : '';
+
+          html += '<div class="row">' +
+            '<div class="st ' + (m.isLive ? 'live' : '') + '">' + escapeHtml(m.statusLabel) + (subLine ? ('<br><span style="color:#94a3b8">' + escapeHtml(subLine) + '</span>') : '') + '</div>' +
+            '<div class="tm home"' + homeClick + '><span>' + escapeHtml(m.homeName) + '</span>' + renderLogoHtml(m.homeLogo, m.homeName, false) + '</div>' +
+            '<div class="sc">' + escapeHtml(m.scoreText) + '</div>' +
+            '<div class="tm away"' + awayClick + '>' + renderLogoHtml(m.awayLogo, m.awayName, false) + '<span>' + escapeHtml(m.awayName) + '</span></div>' +
+            '<div><button type="button" class="act-btn" onclick="openMatchDetail(\'' + escapeHtml(m.slug) + '\')">تفاصيل</button></div>' +
+          '</div>';
+        }
+        html += '</div>';
+        return html;
+      }
+
+      function extractRows(payload) {
+        if (!payload) return [];
+        if (Array.isArray(payload)) return payload;
+        if (Array.isArray(payload.standings)) return payload.standings;
+        if (Array.isArray(payload.data)) return payload.data;
+        if (Array.isArray(payload.rows)) return payload.rows;
+        if (Array.isArray(payload.topscorers)) return payload.topscorers;
+        if (Array.isArray(payload.scorers)) return payload.scorers;
+        if (payload.data && Array.isArray(payload.data.standings)) return payload.data.standings;
+        if (payload.data && Array.isArray(payload.data.rows)) return payload.data.rows;
+        return [];
+      }
+
+      function renderStandingsBox(payload) {
+        var rows = extractRows(payload);
+        var html = '<div class="box"><div class="box-h"><span>ترتيب الفرق (' + escapeHtml(state.selectedLeagueSlug || VERIFIED_LA_LIGA_SLUG) + ')</span><span>' + rows.length + '</span></div>';
+        if (!rows.length) {
+          html += '<div class="empty">لا توجد بيانات ترتيب متاحة حالياً.</div></div>';
+          return html;
+        }
+        html += '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>الفريق</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>نقاط</th></tr></thead><tbody>';
+        for (var i = 0; i < rows.length; i++) {
+          var r = rows[i] || {};
+          var teamObj = r.team || r;
+          var teamName = getEntityName(teamObj, r.team_name || '');
+          var teamSlug = r.team_slug || getEntitySlug(teamObj) || '';
+          var teamLogo = sanitizeLogoUrl(r.team_logo || teamObj.logo || teamObj.team_logo || '');
+          var pos = r.position || r.rank || (i + 1);
+          var played = r.played !== undefined ? r.played : (r.matches_played !== undefined ? r.matches_played : '-');
+          var won = r.win !== undefined ? r.win : (r.won !== undefined ? r.won : '-');
+          var draw = r.draw !== undefined ? r.draw : (r.drawn !== undefined ? r.drawn : '-');
+          var loss = r.loss !== undefined ? r.loss : (r.lost !== undefined ? r.lost : '-');
+          var pts = r.points !== undefined ? r.points : (r.pts !== undefined ? r.pts : '-');
+
+          var trAttr = teamSlug ? ' class="clickable-row" onclick="openTeamPage(\'' + escapeHtml(teamSlug) + '\')"' : '';
+          html += '<tr' + trAttr + '>' +
+            '<td>' + escapeHtml(pos) + '</td>' +
+            '<td><div style="display:flex;align-items:center;gap:6px">' + renderLogoHtml(teamLogo, teamName, false) + '<span>' + escapeHtml(teamName) + '</span></div></td>' +
+            '<td>' + escapeHtml(played) + '</td>' +
+            '<td>' + escapeHtml(won) + '</td>' +
+            '<td>' + escapeHtml(draw) + '</td>' +
+            '<td>' + escapeHtml(loss) + '</td>' +
+            '<td><strong>' + escapeHtml(pts) + '</strong></td>' +
+          '</tr>';
+        }
+        html += '</tbody></table></div></div>';
+        return html;
+      }
+
+      function renderScorersBox(payload) {
+        var rows = extractRows(payload);
+        var html = '<div class="box"><div class="box-h"><span>الهدافون (' + escapeHtml(state.selectedLeagueSlug || VERIFIED_LA_LIGA_SLUG) + ')</span><span>' + rows.length + '</span></div>';
+        if (!rows.length) {
+          html += '<div class="empty">لا توجد بيانات هدافين متاحة حالياً.</div></div>';
+          return html;
+        }
+        html += '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>اللاعب</th><th>الفريق</th><th>الأهداف</th></tr></thead><tbody>';
+        for (var i = 0; i < rows.length; i++) {
+          var item = rows[i] || {};
+          var playerObj = item.player || item;
+          var teamObj = item.team || {};
+          var pName = getEntityName(playerObj, item.player_name || '');
+          var pLogo = sanitizeLogoUrl(item.player_logo || playerObj.logo || playerObj.player_logo || playerObj.image || '');
+          var tName = getEntityName(teamObj, item.team_name || '');
+          var goals = item.goals !== undefined ? item.goals : (item.total_goals !== undefined ? item.total_goals : '-');
+
+          html += '<tr>' +
+            '<td>' + escapeHtml(i + 1) + '</td>' +
+            '<td><div style="display:flex;align-items:center;gap:6px">' + renderLogoHtml(pLogo, pName, false) + '<span>' + escapeHtml(pName) + '</span></div></td>' +
+            '<td>' + escapeHtml(tName) + '</td>' +
+            '<td><strong>' + escapeHtml(goals) + '</strong></td>' +
+          '</tr>';
+        }
+        html += '</tbody></table></div></div>';
+        return html;
+      }
+
+      function renderLeaguesSection() {
+        var map = new Map();
+        map.set(VERIFIED_LA_LIGA_SLUG, {
+          name: 'الدوري الإسباني',
+          slug: VERIFIED_LA_LIGA_SLUG,
+          logo: ''
+        });
+
+        for (var i = 0; i < state.matches.length; i++) {
+          var m = state.matches[i];
+          if (m.compSlug) {
+            if (!map.has(m.compSlug)) {
+              map.set(m.compSlug, {
+                name: m.compName || m.compSlug,
+                slug: m.compSlug,
+                logo: m.compLogo || ''
+              });
+            } else if (m.compLogo && !map.get(m.compSlug).logo) {
+              map.get(m.compSlug).logo = m.compLogo;
+            }
+          }
+        }
+
+        var items = Array.from(map.values());
+        var html = '<div class="box"><div class="box-h"><span>جميع الدوريات المتاحة</span><span>' + items.length + '</span></div>';
+        for (var j = 0; j < items.length; j++) {
+          var lg = items[j];
+          html += '<div class="league-item"><div class="league-head">' +
+            '<div class="league-meta">' + renderLogoHtml(lg.logo, lg.name, false) + '<span>' + escapeHtml(lg.name) + '</span><span class="slug-tag">' + escapeHtml(lg.slug) + '</span></div>' +
+            '<button type="button" class="btn-sec" onclick="openLeagueStandings(\'' + escapeHtml(lg.slug) + '\')">عرض الترتيب</button>' +
+          '</div></div>';
+        }
+        html += '</div>';
+        return html;
+      }
+
+      function renderMatchDetailSection() {
+        var html = '<div class="box"><div class="box-h"><span>تفاصيل المباراة</span><span>' + escapeHtml(state.selectedMatchSlug || '-') + '</span></div>';
+        if (!state.matchDetail) {
+          html += '<div class="empty">اختر زر "تفاصيل" من أي مباراة لعرض بياناتها من SportScore.</div></div>';
+          return html;
+        }
+        var d = state.matchDetail.data && typeof state.matchDetail.data === 'object' && !Array.isArray(state.matchDetail.data)
+          ? state.matchDetail.data
+          : state.matchDetail;
+        var norm = normalizeMatch(d);
+
+        html += '<div class="detail-card">' +
+          '<div style="display:flex;justify-content:space-around;align-items:center;gap:8px;text-align:center">' +
+            '<div>' + renderLogoHtml(norm.homeLogo, norm.homeName, true) + '<div style="font-weight:900;font-size:13px;margin-top:4px">' + escapeHtml(norm.homeName) + '</div></div>' +
+            '<div class="sc" style="font-size:16px;padding:8px 14px">' + escapeHtml(norm.scoreText) + '</div>' +
+            '<div>' + renderLogoHtml(norm.awayLogo, norm.awayName, true) + '<div style="font-weight:900;font-size:13px;margin-top:4px">' + escapeHtml(norm.awayName) + '</div></div>' +
+          '</div>' +
+          '<div class="kv-grid">' +
+            '<div class="kv"><div class="kv-k">الحالة</div><div class="kv-v">' + escapeHtml(norm.statusLabel || '-') + '</div></div>' +
+            '<div class="kv"><div class="kv-k">التاريخ</div><div class="kv-v">' + escapeHtml(norm.datePart || '-') + '</div></div>' +
+            '<div class="kv"><div class="kv-k">البطولة</div><div class="kv-v">' + escapeHtml(norm.compName || '-') + '</div></div>' +
+          '</div>' +
+        '</div></div>';
+        return html;
+      }
+
+      function renderEntitySection() {
+        var html = '<div class="box"><div class="box-h"><span>بحث الفريق (TEAM_SLUG)</span></div><div class="player-lookup-card">' +
+          '<form class="lookup-form" onsubmit="submitTeamLookup(event)">' +
+            '<input class="inp" id="teamSlugInput" type="text" placeholder="مثال: real-madrid" value="' + escapeHtml(state.selectedTeamSlug) + '" />' +
+            '<button class="btn" type="submit">جلب الفريق</button>' +
+          '</form>';
+
+        if (state.teamData) {
+          var td = state.teamData.data && typeof state.teamData.data === 'object' && !Array.isArray(state.teamData.data)
+            ? state.teamData.data
+            : state.teamData;
+          var tName = getEntityName(td.team || td, state.selectedTeamSlug);
+          var tLogo = sanitizeLogoUrl(td.team_logo || (td.team && (td.team.logo || td.team.team_logo)) || '');
+          var tMatchesRaw = extractListFromPayload(td.matches || td.events || state.teamData);
+
+          html += '<div style="margin-top:12px;display:flex;align-items:center;gap:8px">' +
+            renderLogoHtml(tLogo, tName, true) +
+            '<div><div style="font-weight:900;font-size:14px">' + escapeHtml(tName) + '</div><div class="slug-tag">' + escapeHtml(state.selectedTeamSlug) + '</div></div>' +
+          '</div>';
+
+          if (tMatchesRaw.length) {
+            html += '<div style="margin-top:10px;font-size:12px;font-weight:800">مباريات الفريق (' + tMatchesRaw.length + ')</div>';
+            for (var i = 0; i < tMatchesRaw.length; i++) {
+              var tm = normalizeMatch(tMatchesRaw[i]);
+              html += '<div class="row">' +
+                '<div class="st">' + escapeHtml(tm.statusLabel) + '</div>' +
+                '<div class="tm home">' + escapeHtml(tm.homeName) + '</div>' +
+                '<div class="sc">' + escapeHtml(tm.scoreText) + '</div>' +
+                '<div class="tm away">' + escapeHtml(tm.awayName) + '</div>' +
+                '<div>' + (tm.slug ? ('<button type="button" class="act-btn" onclick="openMatchDetail(\'' + escapeHtml(tm.slug) + '\')">تفاصيل</button>') : '') + '</div>' +
+              '</div>';
+            }
+          }
+        }
+        html += '</div></div>';
+
+        html += '<div class="box"><div class="box-h"><span>إحصائيات اللاعب (PLAYER_SLUG)</span></div><div class="player-lookup-card">' +
+          '<form class="lookup-form" onsubmit="submitPlayerLookup(event)">' +
+            '<input class="inp" id="playerSlugInput" type="text" placeholder="أدخل معرّف اللاعب PLAYER_SLUG" value="' + escapeHtml(state.selectedPlayerSlug) + '" />' +
+            '<button class="btn" type="submit">جلب اللاعب</button>' +
+          '</form>';
+
+        if (state.playerData) {
+          var pd = state.playerData.data && typeof state.playerData.data === 'object' && !Array.isArray(state.playerData.data)
+            ? state.playerData.data
+            : state.playerData;
+          var pObj = pd.player || pd;
+          var pName = getEntityName(pObj, state.selectedPlayerSlug);
+          var pLogo = sanitizeLogoUrl(pd.player_logo || pObj.logo || pObj.player_logo || pObj.image || '');
+          var stats = pd.statistics || pd.stats || pObj.statistics || pObj.stats || {};
+
+          html += '<div style="margin-top:12px;display:flex;align-items:center;gap:8px">' +
+            renderLogoHtml(pLogo, pName, true) +
+            '<div><div style="font-weight:900;font-size:14px">' + escapeHtml(pName) + '</div><div class="slug-tag">' + escapeHtml(state.selectedPlayerSlug) + '</div></div>' +
+          '</div>';
+
+          var keys = Object.keys(stats || {});
+          if (keys.length) {
+            html += '<div class="kv-grid">';
+            for (var k = 0; k < keys.length; k++) {
+              var key = keys[k];
+              var val = stats[key];
+              if (typeof val !== 'object' && val !== null && val !== undefined) {
+                html += '<div class="kv"><div class="kv-k">' + escapeHtml(key) + '</div><div class="kv-v">' + escapeHtml(val) + '</div></div>';
+              }
+            }
+            html += '</div>';
+          }
+        }
+        html += '</div></div>';
+        return html;
+      }
+
+      function render() {
+        document.getElementById('todayIso').textContent = getTodayIso();
+        var container = document.getElementById('appContent');
+        var tab = state.activeTab;
+
+        if (tab === 'home') {
+          var liveList = filterMatchesByMode('live');
+          var todayList = filterMatchesByMode('today');
+          var out = '';
+          out += renderMatchesBox('المباريات المباشرة', liveList, 'لا توجد مباريات مباشرة حالياً.');
+          out += renderMatchesBox('مباريات اليوم', todayList, 'لا توجد مباريات مسجلة لليوم في القائمة الحالية.');
+          out += renderStandingsBox(state.standings);
+          out += renderScorersBox(state.scorers);
+          container.innerHTML = out;
+          return;
+        }
+
+        if (tab === 'live') {
+          container.innerHTML = renderMatchesBox('المباريات المباشرة', filterMatchesByMode('live'), 'لا توجد مباريات مباشرة حالياً.');
+          return;
+        }
+
+        if (tab === 'today') {
+          container.innerHTML = renderMatchesBox('مباريات اليوم', filterMatchesByMode('today'), 'لا توجد مباريات لليوم في البيانات الحالية.');
+          return;
+        }
+
+        if (tab === 'upcoming') {
+          container.innerHTML = renderMatchesBox('المباريات القادمة', filterMatchesByMode('upcoming'), 'لا توجد مباريات قادمة متاحة حالياً.');
+          return;
+        }
+
+        if (tab === 'results') {
+          container.innerHTML = renderMatchesBox('النتائج السابقة', filterMatchesByMode('results'), 'لا توجد نتائج سابقة متاحة حالياً.');
+          return;
+        }
+
+        if (tab === 'leagues') {
+          container.innerHTML = renderLeaguesSection();
+          return;
+        }
+
+        if (tab === 'standings') {
+          container.innerHTML = renderStandingsBox(state.standings);
+          return;
+        }
+
+        if (tab === 'scorers') {
+          container.innerHTML = renderScorersBox(state.scorers);
+          return;
+        }
+
+        if (tab === 'match') {
+          container.innerHTML = renderMatchDetailSection();
+          return;
+        }
+
+        if (tab === 'entity') {
+          container.innerHTML = renderEntitySection();
+          return;
+        }
+      }
 
       window.addEventListener('beforeinstallprompt', function (ev) {
         ev.preventDefault();
@@ -287,3 +1398,49 @@
             installBtn.style.display = 'none';
           });
         });
+      }
+
+      window.addEventListener('online', function () {
+        syncCurrentTab(true, false);
+      });
+
+      window.addEventListener('offline', function () {
+        setSyncBadge('بدون إنترنت', true);
+        setNotice('تم فقدان الاتصال بالإنترنت. يتم عرض البيانات المحفوظة إن وجدت.', true);
+      });
+
+      if (
+        'serviceWorker' in navigator &&
+        (window.location.protocol === 'https:' || window.location.protocol === 'http:')
+      ) {
+        var swCode = [
+          "const CACHE_NAME = 'dardouki-pwa-v1';",
+          "self.addEventListener('install', (event) => {",
+          "  event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(['./'])));",
+          "  self.skipWaiting();",
+          "});",
+          "self.addEventListener('fetch', (event) => {",
+          "  if (event.request.method !== 'GET') return;",
+          "  event.respondWith(",
+          "    fetch(event.request).then((res) => {",
+          "      const copy = res.clone();",
+          "      caches.open(CACHE_NAME).then((c) => c.put(event.request, copy)).catch(() => {});",
+          "      return res;",
+          "    }).catch(() => caches.match(event.request))",
+          "  );",
+          "});"
+        ].join('\n');
+        var blob = new Blob([swCode], { type: 'application/javascript' });
+        var swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl).catch(function () {});
+      }
+
+      render();
+      syncCurrentTab(false, false);
+      setInterval(function () {
+        syncCurrentTab(false, true);
+      }, AUTO_SYNC_MS);
+    })();
+  </script>
+</body>
+</html>
