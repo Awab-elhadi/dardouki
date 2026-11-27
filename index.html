@@ -179,7 +179,7 @@
 
   <script>
     var TSDB_BASE = 'https://www.thesportsdb.com/api/v1/json/123';
-    var AUTO_SYNC_MS = 90000; // كل دقيقة ونصف (90 ثانية)
+    var AUTO_SYNC_MS = 90000;
     var currentTab = 'matches';
     var currentLeague = 'bl1';
     var selectedDate = getIsoDate(0);
@@ -221,6 +221,8 @@
       'holstein kiel': 'هولشتاين كيل',
       'darmstadt': 'دارمشتات',
       'nürnberg': 'نورنبيرغ',
+      'köln': 'كولن',
+      'paderborn': 'بادربورن',
       'schalke 04': 'شالكه 04',
       'racing de santander': 'راسينغ سانتاندير',
       'levante': 'ليفانتي',
@@ -299,6 +301,11 @@
         if (low.indexOf(keys[i]) !== -1) return TEAM_AR[keys[i]];
       }
       return clean;
+    }
+
+    function translateRound(rawRound) {
+      if (!rawRound) return 'الجولة';
+      return String(rawRound).replace(/^Spieltag\s*/i, 'الجولة ').replace(/^Matchday\s*/i, 'الجولة ');
     }
 
     function initialsBadge(name) {
@@ -407,7 +414,7 @@
         var dtRaw = m.matchDateTime || '';
         var datePart = dtRaw.slice(0, 10);
         var timePart = dtRaw.slice(11, 16);
-        var roundName = (m.group && m.group.groupName) ? m.group.groupName : 'الجولة';
+        var roundName = (m.group && m.group.groupName) ? translateRound(m.group.groupName) : 'الجولة';
         var isLive = !m.matchIsFinished && hasRes;
         var statusLabel = m.matchIsFinished ? 'انتهت' : (isLive ? 'مباشر' : (timePart || 'مجدولة'));
 
@@ -457,6 +464,7 @@
           pts: r.points !== undefined ? r.points : '-'
         });
       }
+      out.sort(function (a, b) { return Number(a.pos) - Number(b.pos); });
       return out;
     }
 
@@ -576,6 +584,7 @@
               pts: r.intPoints !== undefined ? r.intPoints : '-'
             });
           }
+          mapped.sort(function (a, b) { return Number(a.pos) - Number(b.pos); });
           standingsByLeague[lg.code] = mapped;
           finishTs();
         }, function (e) { tsErrs.push('ترتيب: ' + e); finishTs(); });
@@ -795,6 +804,7 @@
 
       for (var i = 0; i < allMatches.length; i++) {
         var m = allMatches[i];
+        if (selectedDate && m.date && m.date !== selectedDate) continue;
         if (statusFilter === 'live' && !m.isLive) continue;
         if (statusFilter === 'fav' && !favTeams[m.home] && !favTeams[m.away]) continue;
         if (q) {
@@ -805,7 +815,7 @@
       }
 
       if (!filtered.length) {
-        view.innerHTML = '<div class="comp-block"><div style="padding:18px;text-align:center;color:#64748b;font-size:12px">لا توجد مباريات مطابقة للفلتر أو التاريخ المحدد حالياً</div></div>';
+        view.innerHTML = '<div class="comp-block"><div style="padding:18px;text-align:center;color:#64748b;font-size:12px">لا توجد مباريات في تاريخ ' + selectedDate + ' للفلتر أو البطولة المحددة</div></div>';
         return;
       }
 
