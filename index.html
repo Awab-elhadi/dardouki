@@ -42,13 +42,13 @@
 <body>
   <header>
     <div class="brand">⚡ <span>DARDOUKI</span></div>
-    <div class="sync" id="syncStatus">جاري التحميل...</div>
+    <div class="sync" id="syncStatus">جاهز</div>
   </header>
 
   <div class="wrap">
     <div class="main-tabs">
-      <button class="m-tab active" onclick="setTab('matches', this)">المباريات</button>
-      <button class="m-tab" onclick="setTab('standings', this)">الترتيب</button>
+      <button class="m-tab active" id="tabMatches" onclick="setTab('matches', this)">المباريات</button>
+      <button class="m-tab" id="tabStandings" onclick="setTab('standings', this)">الترتيب</button>
       <button class="m-tab" onclick="refreshAll()">تحديث الآن</button>
     </div>
 
@@ -116,41 +116,59 @@
     const state = {
       tab: 'matches',
       leagueCode: '4328',
-      matches: [],
-      standings: []
+      matches: FALLBACK_MATCHES['4328'].slice(),
+      standings: FALLBACK_STANDINGS['4328'].slice()
     };
 
     function setTab(tab, btn) {
       state.tab = tab;
       document.querySelectorAll('.m-tab').forEach(b => b.classList.remove('active'));
-      if (btn && tab !== 'refresh') btn.classList.add('active');
+      if (btn) btn.classList.add('active');
       render();
     }
 
     function selectLeague(code) {
       state.leagueCode = code;
+      state.matches = (FALLBACK_MATCHES[code] || []).slice();
+      state.standings = (FALLBACK_STANDINGS[code] || []).slice();
       renderLeagues();
+      render();
       refreshAll();
     }
 
     function renderLeagues() {
-      document.getElementById('leaguesBar').innerHTML = LEAGUES.map(l =>
+      const bar = document.getElementById('leaguesBar');
+      if (!bar) return;
+      bar.innerHTML = LEAGUES.map(l =>
         `<button class="lg-chip ${state.leagueCode === l.code ? 'active' : ''}" onclick="selectLeague('${l.code}')">${l.name}</button>`
       ).join('');
     }
 
-    async function fetchJson(url) {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 9000);
-      try {
-        const res = await fetch(url, { signal: controller.signal });
-        clearTimeout(timer);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.json();
-      } catch (err) {
-        clearTimeout(timer);
-        throw new Error(err.name === 'AbortError' ? 'انتهت المهلة' : err.message);
-      }
+    function fetchJson(url) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.timeout = 8000;
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              resolve(JSON.parse(xhr.responseText));
+            } catch (e) {
+              reject(new Error('بيانات غير صالحة'));
+            }
+          } else {
+            reject(new Error('HTTP ' + xhr.status));
+          }
+        };
+        xhr.ontimeout = () => reject(new Error('انتهت المهلة'));
+        xhr.onerror = () => reject(new Error('تعذر الاتصال'));
+        xhr.send();
+      });
     }
 
-    function formatEvent(ev
+    function formatEvent(ev, lgName, isUpcoming) {
+      const hScore = ev.intHomeScore;
+      const aScore = ev.intAwayScore;
+      const hasScore = hScore !== null && aScore !== null && hScore !== undefined && aScore !== undefined && String(hScore) !== '' && String(aScore) !== '';
+      const statusStr = String(ev.strStatus || '').toUpperCase();
+      const live = ['1H', '2H', 'HT', 'ET', 'P', 'LIVE'].indexOf(status
