@@ -18,6 +18,7 @@
       --gold: #b88b3a;
       --border: #dfd8c8;
       --highlight: rgba(184, 139, 58, 0.22);
+      --mark-bg: rgba(184, 139, 58, 0.28);
       --col-rule: rgba(184, 139, 58, 0.25);
     }
 
@@ -34,6 +35,7 @@
       --gold: #b88b3a;
       --border: #dfd8c8;
       --highlight: rgba(184, 139, 58, 0.22);
+      --mark-bg: rgba(184, 139, 58, 0.28);
       --col-rule: rgba(184, 139, 58, 0.25);
     }
 
@@ -50,6 +52,7 @@
       --gold: #d4a64a;
       --border: #272d2a;
       --highlight: rgba(212, 166, 74, 0.22);
+      --mark-bg: rgba(212, 166, 74, 0.3);
       --col-rule: rgba(212, 166, 74, 0.18);
     }
 
@@ -66,6 +69,7 @@
         --gold: #d4a64a;
         --border: #272d2a;
         --highlight: rgba(212, 166, 74, 0.22);
+        --mark-bg: rgba(212, 166, 74, 0.3);
         --col-rule: rgba(212, 166, 74, 0.18);
       }
     }
@@ -84,7 +88,6 @@
       min-height: 100vh;
     }
 
-    /* شريط علوي نحيف لعدم تضييق القراءة */
     .topbar {
       background-color: var(--bg-header);
       color: #ffffff;
@@ -236,8 +239,116 @@
     /* مساحة الصفحة الرئيسية كالصحيفة */
     .newspaper-wrap {
       max-width: 1120px;
-      margin: 0.85rem auto 2rem;
+      margin: 0.75rem auto 2rem;
       padding: 0 0.75rem;
+    }
+
+    /* شريط البحث عن الآيات */
+    .ayah-search-box {
+      background-color: var(--bg-paper);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.55rem 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .ayah-search-row {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .ayah-search-row input {
+      flex: 1;
+      min-width: 180px;
+      font-family: inherit;
+      font-size: 1.02rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .scope-btn {
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 700;
+      padding: 0.32rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background-color: var(--accent-soft);
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .search-results-panel {
+      display: none;
+      margin-top: 0.6rem;
+      padding-top: 0.55rem;
+      border-top: 1px solid var(--border);
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .search-results-panel.open {
+      display: block;
+    }
+
+    .search-results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 0.45rem;
+    }
+
+    .clear-search-btn {
+      font-family: inherit;
+      font-size: 0.88rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 6px;
+      padding: 0.15rem 0.5rem;
+      cursor: pointer;
+    }
+
+    .result-ayah-card {
+      padding: 0.55rem 0.7rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background-color: var(--bg-page);
+      margin-bottom: 0.45rem;
+      cursor: pointer;
+    }
+
+    .result-ayah-card:hover {
+      border-color: var(--accent);
+      background-color: var(--accent-soft);
+    }
+
+    .result-ayah-meta {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.2rem;
+    }
+
+    .result-ayah-text {
+      font-size: 1.45rem;
+      line-height: 2;
+      color: var(--text-main);
+    }
+
+    mark.hit {
+      background-color: var(--mark-bg);
+      color: inherit;
+      padding: 0 0.15rem;
+      border-radius: 4px;
     }
 
     .newspaper-sheet {
@@ -280,7 +391,6 @@
       color: var(--text-main);
     }
 
-    /* أعمدة الصحيفة للآيات */
     .newspaper-columns {
       font-size: 2.05rem;
       line-height: 2.55;
@@ -383,6 +493,20 @@
   </header>
 
   <main class="newspaper-wrap">
+    <section class="ayah-search-box" aria-label="البحث في الآيات">
+      <div class="ayah-search-row">
+        <input id="ayahSearchInput" type="search" placeholder="ابحث في الآيات واظهر النتائج..." />
+        <button id="scopeBtn" class="scope-btn" type="button">النطاق: السورة الحالية</button>
+      </div>
+      <div id="searchResultsPanel" class="search-results-panel">
+        <div class="search-results-header">
+          <span id="searchStatusText">الآيات المطابقة:</span>
+          <button id="clearSearchBtn" class="clear-search-btn" type="button">إخفاء النتائج</button>
+        </div>
+        <div id="searchResultsList"></div>
+      </div>
+    </section>
+
     <article class="newspaper-sheet">
       <div class="sheet-masthead">
         <h1 id="surahTitle" class="sheet-title">سورة الفاتحة</h1>
@@ -559,8 +683,8 @@
     };
 
     const API_BASE = "https://api.alquran.cloud/v1";
-    const POS_KEY = "quran_newspaper_pos_v1";
-    const THEME_KEY = "quran_newspaper_theme_v1";
+    const POS_KEY = "quran_newspaper_pos_v2";
+    const THEME_KEY = "quran_newspaper_theme_v2";
     const THEME_MODES = ["auto", "light", "dark"];
     const THEME_LABELS = {
       auto: "الوضع: نظام الجهاز",
@@ -575,6 +699,13 @@
     const surahFilterInput = document.getElementById("surahFilterInput");
     const surahList = document.getElementById("surahList");
 
+    const ayahSearchInput = document.getElementById("ayahSearchInput");
+    const scopeBtn = document.getElementById("scopeBtn");
+    const searchResultsPanel = document.getElementById("searchResultsPanel");
+    const searchStatusText = document.getElementById("searchStatusText");
+    const searchResultsList = document.getElementById("searchResultsList");
+    const clearSearchBtn = document.getElementById("clearSearchBtn");
+
     const resumeBtn = document.getElementById("resumeBtn");
     const themeBtn = document.getElementById("themeBtn");
     const fontBtn = document.getElementById("fontBtn");
@@ -588,12 +719,49 @@
     const nextBtn = document.getElementById("nextBtn");
 
     let currentSurah = 1;
+    let currentAyahs = [];
     let currentTafsir = [];
     let fontRem = 2.05;
     let themeIndex = 0;
+    let searchAllQuran = false;
+    let searchTimer = null;
 
     function toAr(n) {
       return String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
+    }
+
+    function normalizeArabic(str) {
+      return String(str || "")
+        .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
+        .replace(/[إأآا]/g, "ا")
+        .replace(/ى/g, "ي")
+        .replace(/ة/g, "ه")
+        .replace(/ؤ/g, "و")
+        .replace(/ئ/g, "ي");
+    }
+
+    function escapeRegExp(str) {
+      return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function highlightPlainText(text, query) {
+      const q = query.trim();
+      if (!q) return document.createTextNode(text);
+      const regex = new RegExp(`(${escapeRegExp(q)})`, "gi");
+      const parts = text.split(regex);
+      const frag = document.createDocumentFragment();
+      parts.forEach((part) => {
+        if (!part) return;
+        if (part.toLowerCase() === q.toLowerCase()) {
+          const mark = document.createElement("mark");
+          mark.className = "hit";
+          mark.textContent = part;
+          frag.appendChild(mark);
+        } else {
+          frag.appendChild(document.createTextNode(part));
+        }
+      });
+      return frag;
     }
 
     function applyTheme(mode) {
@@ -667,6 +835,7 @@
     }
 
     function renderAyahs(ayahs) {
+      currentAyahs = ayahs;
       quranText.innerHTML = "";
       ayahs.forEach((ayah) => {
         const span = document.createElement("span");
@@ -695,16 +864,109 @@
       });
     }
 
-    function selectAyah(ayahNum) {
+    function selectAyah(ayahNum, scrollIntoView = false) {
       const target = Number(ayahNum);
+      let activeEl = null;
       quranText.querySelectorAll(".ayah-unit").forEach((el) => {
-        el.classList.toggle("active", Number(el.dataset.ayah) === target);
+        const isMatch = Number(el.dataset.ayah) === target;
+        el.classList.toggle("active", isMatch);
+        if (isMatch) activeEl = el;
       });
+
+      if (scrollIntoView && activeEl) {
+        activeEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
 
       const found = currentTafsir.find((a) => a.numberInSurah === target);
       tafsirLabel.textContent = `آية (${toAr(target)}): `;
       tafsirContent.textContent = found ? found.text : "تم تحديد موضع القراءة وحفظه تلقائياً.";
       savePos(currentSurah, target);
+    }
+
+    function renderSearchMatches(matches, query) {
+      searchResultsPanel.classList.add("open");
+      searchResultsList.innerHTML = "";
+
+      if (!matches.length) {
+        searchStatusText.textContent = "لا توجد آيات مطابقة لهذا البحث.";
+        return;
+      }
+
+      searchStatusText.textContent = `الآيات المطابقة (${toAr(matches.length)}):`;
+
+      matches.slice(0, 50).forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "result-ayah-card";
+
+        const meta = document.createElement("div");
+        meta.className = "result-ayah-meta";
+        meta.textContent = `${item.surahName} • آية (${toAr(item.ayahNumber)})`;
+
+        const body = document.createElement("div");
+        body.className = "result-ayah-text";
+        body.appendChild(highlightPlainText(item.text, query));
+
+        card.appendChild(meta);
+        card.appendChild(body);
+
+        card.addEventListener("click", async () => {
+          if (item.surahNumber !== currentSurah) {
+            await loadSurah(item.surahNumber, item.ayahNumber);
+          } else {
+            selectAyah(item.ayahNumber, true);
+          }
+        });
+
+        searchResultsList.appendChild(card);
+      });
+    }
+
+    async function runAyahSearch() {
+      const q = ayahSearchInput.value.trim();
+      if (!q) {
+        searchResultsPanel.classList.remove("open");
+        searchResultsList.innerHTML = "";
+        return;
+      }
+
+      const normQ = normalizeArabic(q);
+      const surahInfo = SURAHS_114.find(([n]) => n === currentSurah) || SURAHS_114[0];
+
+      const localMatches = currentAyahs
+        .filter((a) => a.text.includes(q) || normalizeArabic(a.text).includes(normQ))
+        .map((a) => ({
+          surahNumber: currentSurah,
+          surahName: surahInfo[1],
+          ayahNumber: a.numberInSurah,
+          text: a.text
+        }));
+
+      renderSearchMatches(localMatches, q);
+
+      if (searchAllQuran) {
+        searchStatusText.textContent = "جاري البحث في جميع سور القرآن...";
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 8000);
+          const res = await fetch(
+            `${API_BASE}/search/${encodeURIComponent(q)}/all/quran-uthmani`,
+            { signal: ctrl.signal }
+          );
+          clearTimeout(timer);
+          const data = await res.json();
+          if (data.code === 200 && data.data && Array.isArray(data.data.matches)) {
+            const apiMatches = data.data.matches.map((m) => ({
+              surahNumber: m.surah.number,
+              surahName: m.surah.name,
+              ayahNumber: m.numberInSurah,
+              text: m.text
+            }));
+            renderSearchMatches(apiMatches, q);
+          }
+        } catch (e) {
+          renderSearchMatches(localMatches, q);
+        }
+      }
     }
 
     async function loadSurah(surahNum, targetAyah = 1) {
@@ -721,7 +983,7 @@
       renderSurahList(surahFilterInput.value);
       currentTafsir = [];
       renderAyahs(buildFallback(num, count));
-      selectAyah(targetAyah);
+      selectAyah(targetAyah, targetAyah > 1);
 
       try {
         const ctrl = new AbortController();
@@ -736,7 +998,7 @@
         if (tJson.code === 200 && tJson.data && Array.isArray(tJson.data.ayahs)) {
           currentTafsir = (fJson.code === 200 && fJson.data && fJson.data.ayahs) || [];
           renderAyahs(tJson.data.ayahs);
-          selectAyah(targetAyah);
+          selectAyah(targetAyah, targetAyah > 1);
         }
       } catch (e) {}
     }
@@ -745,6 +1007,21 @@
     closeDrawerBtn.addEventListener("click", closeDrawer);
     drawerBackdrop.addEventListener("click", closeDrawer);
     surahFilterInput.addEventListener("input", (e) => renderSurahList(e.target.value));
+
+    ayahSearchInput.addEventListener("input", () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(runAyahSearch, 220);
+    });
+
+    scopeBtn.addEventListener("click", () => {
+      searchAllQuran = !searchAllQuran;
+      scopeBtn.textContent = searchAllQuran ? "النطاق: كل المصحف" : "النطاق: السورة الحالية";
+      if (ayahSearchInput.value.trim()) runAyahSearch();
+    });
+
+    clearSearchBtn.addEventListener("click", () => {
+      searchResultsPanel.classList.remove("open");
+    });
 
     themeBtn.addEventListener("click", () => {
       themeIndex = (themeIndex + 1) % THEME_MODES.length;
