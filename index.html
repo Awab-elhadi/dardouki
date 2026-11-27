@@ -66,67 +66,12 @@
       flex-direction:column;
       justify-content:space-between;
     }
-    .pitch-midline{
-      position:absolute;
-      top:50%;
-      left:8px;
-      right:8px;
-      height:1px;
-      background:rgba(255,255,255,.28);
-      pointer-events:none;
-    }
-    .pitch-circle{
-      position:absolute;
-      top:50%;
-      left:50%;
-      width:74px;
-      height:74px;
-      transform:translate(-50%,-50%);
-      border:1px solid rgba(255,255,255,.28);
-      border-radius:50%;
-      pointer-events:none;
-    }
-    .pitch-row{
-      position:relative;
-      z-index:2;
-      display:flex;
-      justify-content:space-around;
-      align-items:center;
-      flex-wrap:wrap;
-      gap:6px;
-      margin:4px 0;
-    }
-    .player-node{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      max-width:86px;
-      text-align:center;
-    }
-    .jersey{
-      width:30px;
-      height:30px;
-      border-radius:50%;
-      background:#0f172a;
-      border:2px solid #ffffff;
-      color:#ffffff;
-      font-size:11px;
-      font-weight:900;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      margin-bottom:3px;
-    }
-    .p-name{
-      background:rgba(11,15,25,.82);
-      color:#fff;
-      font-size:10px;
-      font-weight:700;
-      padding:2px 6px;
-      border-radius:6px;
-      line-height:1.3;
-      word-break:break-word;
-    }
+    .pitch-midline{position:absolute;top:50%;left:8px;right:8px;height:1px;background:rgba(255,255,255,.28);pointer-events:none}
+    .pitch-circle{position:absolute;top:50%;left:50%;width:74px;height:74px;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.28);border-radius:50%;pointer-events:none}
+    .pitch-row{position:relative;z-index:2;display:flex;justify-content:space-around;align-items:center;flex-wrap:wrap;gap:6px;margin:4px 0}
+    .player-node{display:flex;flex-direction:column;align-items:center;max-width:86px;text-align:center}
+    .jersey{width:30px;height:30px;border-radius:50%;background:#0f172a;border:2px solid #ffffff;color:#ffffff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-bottom:3px}
+    .p-name{background:rgba(11,15,25,.82);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;line-height:1.3;word-break:break-word}
     .d-section{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
     .d-sec-title{font-size:12px;font-weight:900;color:var(--acc);margin-bottom:8px}
     .d-list{margin:0;padding-right:16px;font-size:12px;color:var(--txt);line-height:1.7}
@@ -148,7 +93,7 @@
 
     <div class="leagues" id="leaguesBar"></div>
     <input class="search" id="q" placeholder="ابحث عن فريق أو بطولة..." onkeyup="renderAll()" />
-    <div class="notice" id="noticeBox">يتم جلب البيانات مباشرة من المصدر الرياضي دون أي بيانات وهمية أو قديمة.</div>
+    <div class="notice" id="noticeBox">يتم جلب البيانات مباشرة من المصادر الرياضية دون أي بيانات وهمية أو قديمة.</div>
     <div id="view"></div>
   </div>
 
@@ -157,10 +102,93 @@
   </div>
 
   <script>
+    var TSDB_BASE = 'https://www.thesportsdb.com/api/v1/json/123';
     var currentTab = 'matches';
     var currentLeague = 'bl1';
     var activeModalMatch = null;
     var activeTeamSide = 'home';
+
+    var TEAM_AR = {
+      'fc bayern münchen': 'بايرن ميونخ',
+      'bayern münchen': 'بايرن ميونخ',
+      'bayern munich': 'بايرن ميونخ',
+      'borussia dortmund': 'بوروسيا دورتموند',
+      'bvb': 'بوروسيا دورتموند',
+      'rb leipzig': 'لايبزيغ',
+      'bayer 04 leverkusen': 'باير ليفركوزن',
+      'bayer leverkusen': 'باير ليفركوزن',
+      'vfb stuttgart': 'شتوتغارت',
+      'eintracht frankfurt': 'آينتراخت فرانكفورت',
+      'sc freiburg': 'فرايبورغ',
+      'tsg hoffenheim': 'هوفنهايم',
+      'vfl wolfsburg': 'فولفسبورغ',
+      'sv werder bremen': 'فيردر بريمن',
+      'werder bremen': 'فيردر بريمن',
+      '1. fc union berlin': 'يونيون برلين',
+      'union berlin': 'يونيون برلين',
+      '1. fsv mainz 05': 'ماينز',
+      'mainz 05': 'ماينز',
+      'fc augsburg': 'أوغسبورغ',
+      'borussia mönchengladbach': 'بوروسيا مونشنغلادباخ',
+      '1. fc heidenheim 1846': 'هايدنهايم',
+      '1. fc heidenheim': 'هايدنهايم',
+      'vfl bochum': 'بوخوم',
+      'fc st. pauli': 'سانت باولي',
+      'st. pauli': 'سانت باولي',
+      'holstein kiel': 'هولشتاين كيل',
+      'arsenal': 'أرسنال',
+      'liverpool': 'ليفربول',
+      'manchester city': 'مانشستر سيتي',
+      'chelsea': 'تشيلسي',
+      'manchester united': 'مانشستر يونايتد',
+      'tottenham hotspur': 'توتنهام',
+      'tottenham': 'توتنهام',
+      'newcastle united': 'نيوكاسل',
+      'aston villa': 'أستون فيلا',
+      'brighton': 'برايتون',
+      'west ham': 'وست هام',
+      'real madrid': 'ريال مدريد',
+      'fc barcelona': 'برشلونة',
+      'barcelona': 'برشلونة',
+      'atletico madrid': 'أتلتيكو مدريد',
+      'sevilla': 'إشبيلية',
+      'real sociedad': 'ريال سوسيداد',
+      'athletic club': 'أتلتيك بيلباو',
+      'inter': 'إنتر ميلان',
+      'inter milan': 'إنتر ميلان',
+      'ac milan': 'ميلان',
+      'milan': 'ميلان',
+      'napoli': 'نابولي',
+      'juventus': 'يوفنتوس',
+      'roma': 'روما',
+      'lazio': 'لاتسيو',
+      'atalanta': 'أتالانتا',
+      'al-hilal': 'الهلال',
+      'al hilal': 'الهلال',
+      'al-nassr': 'النصر',
+      'al nassr': 'النصر',
+      'al-ittihad': 'الاتحاد',
+      'al ittihad': 'الاتحاد',
+      'al-ahli': 'الأهلي السعودي',
+      'al ahli': 'الأهلي السعودي',
+      'zamalek': 'الزمالك',
+      'pyramids': 'بيراميدز'
+    };
+
+    function translateTeamName(rawName) {
+      if (!rawName) return 'فريق';
+      var clean = String(rawName).trim();
+      var lower = clean.toLowerCase();
+      if (TEAM_AR[lower]) return TEAM_AR[lower];
+
+      var keys = Object.keys(TEAM_AR);
+      for (var i = 0; i < keys.length; i++) {
+        if (lower.indexOf(keys[i]) !== -1) {
+          return TEAM_AR[keys[i]];
+        }
+      }
+      return clean;
+    }
 
     var LEAGUES = [
       { code: 'bl1', name: 'الدوري الألماني', openligaShortcut: 'bl1', openligaSeason: '2026', tsdbId: '4331', tsdbSeason: '2026-2027' },
@@ -239,8 +267,8 @@
       var out = [];
       for (var i = 0; i < rows.length; i++) {
         var m = rows[i];
-        var home = (m.team1 && (m.team1.teamName || m.team1.shortName)) || 'فريق 1';
-        var away = (m.team2 && (m.team2.teamName || m.team2.shortName)) || 'فريق 2';
+        var rawHome = (m.team1 && (m.team1.teamName || m.team1.shortName)) || 'فريق 1';
+        var rawAway = (m.team2 && (m.team2.teamName || m.team2.shortName)) || 'فريق 2';
         var results = m.matchResults || [];
         var score = 'vs';
         if (results.length > 0) {
@@ -249,15 +277,14 @@
             score = lastR.pointsTeam1 + ' - ' + lastR.pointsTeam2;
           }
         }
-        var status = m.matchIsFinished ? 'انتهت' : 'مجدولة';
         var dt = m.matchDateTime || '';
         out.push({
           id: 'ol_' + (m.matchID || i),
           league: lgObj.name,
-          home: home,
-          away: away,
+          home: translateTeamName(rawHome),
+          away: translateTeamName(rawAway),
           score: score,
-          status: status,
+          status: m.matchIsFinished ? 'انتهت' : 'مجدولة',
           dateTime: dt.replace('T', ' ').slice(0, 16),
           homeLineup: [],
           awayLineup: [],
@@ -277,7 +304,7 @@
         var r = rows[i];
         out.push({
           pos: i + 1,
-          team: r.teamName || r.shortName || 'فريق',
+          team: translateTeamName(r.teamName || r.shortName || 'فريق'),
           p: r.matches !== undefined ? r.matches : '-',
           w: r.won !== undefined ? r.won : '-',
           d: r.draw !== undefined ? r.draw : '-',
@@ -286,6 +313,28 @@
         });
       }
       return out;
+    }
+
+    function parseTsdbEvent(ev, lgObj, isUpcoming) {
+      var hScore = ev.intHomeScore;
+      var aScore = ev.intAwayScore;
+      var hasScore = hScore !== null && aScore !== null && hScore !== undefined && aScore !== undefined && String(hScore) !== '' && String(aScore) !== '';
+      var dt = ((ev.dateEvent || '') + (ev.strTime ? ' ' + String(ev.strTime).slice(0, 5) : '')).trim();
+      return {
+        id: 'ts_' + (ev.idEvent || (ev.strHomeTeam + '_' + ev.strAwayTeam + '_' + ev.dateEvent)),
+        league: lgObj.name,
+        home: translateTeamName(ev.strHomeTeam || 'فريق 1'),
+        away: translateTeamName(ev.strAwayTeam || 'فريق 2'),
+        score: hasScore ? (hScore + ' - ' + aScore) : (isUpcoming ? 'vs' : '-'),
+        status: hasScore ? 'انتهت' : 'مجدولة',
+        dateTime: dt,
+        homeLineup: [],
+        awayLineup: [],
+        homeBench: [],
+        awayBench: [],
+        homeInjuries: [],
+        awayInjuries: []
+      };
     }
 
     function syncCurrentLeague() {
@@ -331,11 +380,74 @@
           errList.push('الترتيب: ' + err);
           finishStep();
         });
-      } else {
-        st.innerHTML = 'بانتظار مصدر';
-        notice.style.display = 'block';
-        notice.innerHTML = 'بطولة "' + lg.name + '" لا تملك مزود بيانات حياً مفعّلاً ومضموناً بدون حظر أو بيانات وهمية في هذا الإطار حالياً. تم حذف البيانات الوهمية بالكامل.';
-        renderAll();
+      } else if (lg.tsdbId) {
+        var nextUrl = TSDB_BASE + '/eventsnextleague.php?id=' + lg.tsdbId;
+        var lastUrl = TSDB_BASE + '/eventslast.php?id=' + lg.tsdbId;
+        var tsTableUrl = TSDB_BASE + '/lookuptable.php?l=' + lg.tsdbId + '&s=' + encodeURIComponent(lg.tsdbSeason);
+        var steps = 0;
+        var collectedMatches = [];
+        var tsErrs = [];
+
+        function finishTsStep() {
+          steps++;
+          if (steps < 3) return;
+          matchesByLeague[lg.code] = collectedMatches;
+          var hasM = collectedMatches.length > 0;
+          var hasT = standingsByLeague[lg.code] && standingsByLeague[lg.code].length > 0;
+          if (hasM || hasT) {
+            st.innerHTML = 'متصل';
+            notice.style.display = 'none';
+          } else {
+            st.innerHTML = 'غير متاح';
+            notice.style.display = 'block';
+            notice.innerHTML = 'لم يرد أي مباريات أو ترتيب حي لبطولة "' + lg.name + '" من المصدر حالياً' + (tsErrs.length ? ' (' + tsErrs.join(' | ') + ')' : '') + '.';
+          }
+          renderAll();
+        }
+
+        xhrGet(nextUrl, function (data) {
+          var evs = data && Array.isArray(data.events) ? data.events : [];
+          for (var i = 0; i < evs.length; i++) {
+            collectedMatches.push(parseTsdbEvent(evs[i], lg, true));
+          }
+          finishTsStep();
+        }, function (err) {
+          tsErrs.push('القادمة: ' + err);
+          finishTsStep();
+        });
+
+        xhrGet(lastUrl, function (data) {
+          var res = data && Array.isArray(data.results) ? data.results : [];
+          for (var i = 0; i < res.length; i++) {
+            collectedMatches.push(parseTsdbEvent(res[i], lg, false));
+          }
+          finishTsStep();
+        }, function (err) {
+          tsErrs.push('السابقة: ' + err);
+          finishTsStep();
+        });
+
+        xhrGet(tsTableUrl, function (data) {
+          var rows = data && Array.isArray(data.table) ? data.table : [];
+          var mapped = [];
+          for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            mapped.push({
+              pos: r.intRank || (i + 1),
+              team: translateTeamName(r.strTeam || 'فريق'),
+              p: r.intPlayed !== undefined ? r.intPlayed : '-',
+              w: r.intWin !== undefined ? r.intWin : '-',
+              d: r.intDraw !== undefined ? r.intDraw : '-',
+              l: r.intLoss !== undefined ? r.intLoss : '-',
+              pts: r.intPoints !== undefined ? r.intPoints : '-'
+            });
+          }
+          standingsByLeague[lg.code] = mapped;
+          finishTsStep();
+        }, function (err) {
+          tsErrs.push('الترتيب: ' + err);
+          finishTsStep();
+        });
       }
     }
 
