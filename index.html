@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DARDOUKI - دوري أبطال أوروبا والدوري الإسباني</title>
+  <title>DARDOUKI - مباريات الدوريات والبطولات</title>
   <style>
     :root{
       --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
@@ -22,8 +22,8 @@
     .title-lbl{font-size:13px;font-weight:900}
     .btn{background:#0f172a;color:#fff;border:none;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer}
 
-    .leagues{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-    .lg-chip{background:#fff;color:var(--txt);border:1px solid var(--line);padding:7px 14px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer}
+    .leagues{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
+    .lg-chip{white-space:nowrap;background:#fff;color:var(--txt);border:1px solid var(--line);padding:6px 12px;border-radius:99px;font-size:11px;font-weight:800;cursor:pointer}
     .lg-chip.active{background:var(--acc);color:#fff;border-color:var(--acc)}
 
     .msg{background:#fffbeb;border:1px solid #fde68a;color:var(--acc-dark);padding:9px 11px;border-radius:8px;font-size:12px;margin-bottom:10px;display:none}
@@ -72,15 +72,20 @@
   </div>
 
   <script>
-    // ضع مفتاح API Ninjas هنا للتجربة
-    var NINJAS_API_KEY = '';
+    var NINJAS_API_KEY = '8GfktW80IcFGeHARH8YjwY20AG6WvqbkyManYSTQ';
     var AUTO_SYNC_MS = 90000;
     var currentLeague = 'laliga';
-    var matchesByLeague = { laliga: [], ucl: [] };
+    var matchesByLeague = {};
 
     var LEAGUES = [
       { code: 'laliga', name: 'الدوري الإسباني' },
-      { code: 'ucl', name: 'دوري أبطال أوروبا' }
+      { code: 'ucl', name: 'دوري أبطال أوروبا' },
+      { code: 'epl', name: 'الدوري الإنجليزي' },
+      { code: 'bundesliga', name: 'الدوري الألماني' },
+      { code: 'seriea', name: 'الدوري الإيطالي' },
+      { code: 'ligue1', name: 'الدوري الفرنسي' },
+      { code: 'uel', name: 'الدوري الأوروبي' },
+      { code: 'mls', name: 'الدوري الأمريكي' }
     ];
 
     function getTodayIso() {
@@ -92,7 +97,10 @@
     }
 
     function getLeague(code) {
-      return code === 'ucl' ? LEAGUES[1] : LEAGUES[0];
+      for (var i = 0; i < LEAGUES.length; i++) {
+        if (LEAGUES[i].code === code) return LEAGUES[i];
+      }
+      return LEAGUES[0];
     }
 
     function buildWatchUrl(home, away) {
