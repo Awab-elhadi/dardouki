@@ -59,7 +59,7 @@
   </div>
 
   <script>
-    const API_BASE = 'https://www.thesportsdb.com/api/v1/json/3';
+    const API_BASE = 'https://www.thesportsdb.com/api/v1/json/123';
 
     const LEAGUES = [
       { code: '4328', name: 'الدوري الإنجليزي', season: '2026-2027' },
@@ -68,6 +68,50 @@
       { code: '4331', name: 'الدوري الألماني', season: '2026-2027' },
       { code: '4332', name: 'الدوري الإيطالي', season: '2026-2027' }
     ];
+
+    const FALLBACK_MATCHES = {
+      '4328': [
+        { id: 'f1', league: 'الدوري الإنجليزي', home: 'أرسنال', away: 'ليفربول', score: '2 - 1', status: 'انتهت', live: false },
+        { id: 'f2', league: 'الدوري الإنجليزي', home: 'مانشستر سيتي', away: 'تشيلسي', score: 'vs', status: 'مجدولة', live: false }
+      ],
+      '4335': [
+        { id: 'f3', league: 'الدوري الإسباني', home: 'ريال مدريد', away: 'برشلونة', score: '1 - 1', status: 'انتهت', live: false },
+        { id: 'f4', league: 'الدوري الإسباني', home: 'أتلتيكو مدريد', away: 'إشبيلية', score: 'vs', status: 'مجدولة', live: false }
+      ],
+      '4480': [
+        { id: 'f5', league: 'دوري الأبطال', home: 'بايرن ميونخ', away: 'إنتر ميلان', score: '2 - 0', status: 'انتهت', live: false }
+      ],
+      '4331': [
+        { id: 'f6', league: 'الدوري الألماني', home: 'بوروسيا دورتموند', away: 'لايبزيغ', score: '3 - 2', status: 'انتهت', live: false }
+      ],
+      '4332': [
+        { id: 'f7', league: 'الدوري الإيطالي', home: 'ميلان', away: 'نابولي', score: '1 - 0', status: 'انتهت', live: false }
+      ]
+    };
+
+    const FALLBACK_STANDINGS = {
+      '4328': [
+        { pos: 1, team: 'ليفربول', p: 12, w: 9, d: 2, l: 1, pts: 29 },
+        { pos: 2, team: 'أرسنال', p: 12, w: 8, d: 3, l: 1, pts: 27 },
+        { pos: 3, team: 'مانشستر سيتي', p: 12, w: 8, d: 2, l: 2, pts: 26 }
+      ],
+      '4335': [
+        { pos: 1, team: 'برشلونة', p: 12, w: 10, d: 1, l: 1, pts: 31 },
+        { pos: 2, team: 'ريال مدريد', p: 12, w: 8, d: 3, l: 1, pts: 27 }
+      ],
+      '4480': [
+        { pos: 1, team: 'بايرن ميونخ', p: 4, w: 3, d: 0, l: 1, pts: 9 },
+        { pos: 2, team: 'إنتر ميلان', p: 4, w: 3, d: 1, l: 0, pts: 10 }
+      ],
+      '4331': [
+        { pos: 1, team: 'بايرن ميونخ', p: 11, w: 9, d: 2, l: 0, pts: 29 },
+        { pos: 2, team: 'بوروسيا دورتموند', p: 11, w: 7, d: 2, l: 2, pts: 23 }
+      ],
+      '4332': [
+        { pos: 1, team: 'نابولي', p: 12, w: 9, d: 2, l: 1, pts: 29 },
+        { pos: 2, team: 'إنتر ميلان', p: 12, w: 8, d: 2, l: 2, pts: 26 }
+      ]
+    };
 
     const state = {
       tab: 'matches',
@@ -109,142 +153,4 @@
       }
     }
 
-    function formatEvent(ev, lgName, isUpcoming) {
-      const hScore = ev.intHomeScore;
-      const aScore = ev.intAwayScore;
-      const hasScore = hScore !== null && aScore !== null && hScore !== undefined && aScore !== undefined && hScore !== '' && aScore !== '';
-      const statusStr = (ev.strStatus || '').toUpperCase();
-      const live = ['1H', '2H', 'HT', 'ET', 'P', 'LIVE'].includes(statusStr);
-
-      let displayStatus = ev.dateEvent || 'مجدولة';
-      if (live) {
-        displayStatus = 'مباشر';
-      } else if (hasScore || statusStr === 'FT' || statusStr === 'AET' || statusStr === 'PEN') {
-        displayStatus = 'انتهت';
-      } else if (ev.strTime) {
-        displayStatus = `${ev.dateEvent || ''} ${ev.strTime.slice(0, 5)}`.trim();
-      }
-
-      return {
-        id: ev.idEvent || `${ev.strHomeTeam}-${ev.strAwayTeam}-${ev.dateEvent}`,
-        league: lgName,
-        home: ev.strHomeTeam || 'فريق 1',
-        away: ev.strAwayTeam || 'فريق 2',
-        score: hasScore ? `${hScore} - ${aScore}` : (isUpcoming ? 'vs' : '-'),
-        status: displayStatus,
-        live
-      };
-    }
-
-    async function refreshAll() {
-      const statusEl = document.getElementById('syncStatus');
-      const noteEl = document.getElementById('apiNote');
-      statusEl.textContent = 'جاري الجلب...';
-
-      const lgObj = LEAGUES.find(x => x.code === state.leagueCode) || LEAGUES[0];
-      const errors = [];
-
-      try {
-        const [lastRes, nextRes] = await Promise.allSettled([
-          fetchJson(`${API_BASE}/eventslast.php?id=${lgObj.code}`),
-          fetchJson(`${API_BASE}/eventsnextleague.php?id=${lgObj.code}`)
-        ]);
-
-        const nextEvents = nextRes.status === 'fulfilled' ? (nextRes.value?.events || []) : [];
-        const lastEvents = lastRes.status === 'fulfilled' ? (lastRes.value?.results || []) : [];
-
-        if (nextRes.status === 'rejected') errors.push(`القادمة: ${nextRes.reason.message}`);
-        if (lastRes.status === 'rejected') errors.push(`السابقة: ${lastRes.reason.message}`);
-
-        const combined = [
-          ...nextEvents.slice(0, 12).map(ev => formatEvent(ev, lgObj.name, true)),
-          ...lastEvents.slice(0, 15).reverse().map(ev => formatEvent(ev, lgObj.name, false))
-        ];
-        state.matches = combined;
-      } catch (err) {
-        errors.push(err.message);
-      }
-
-      try {
-        const tableRes = await fetchJson(`${API_BASE}/lookuptable.php?l=${lgObj.code}&s=${encodeURIComponent(lgObj.season)}`);
-        const rows = tableRes?.table || [];
-        state.standings = rows.map(row => ({
-          pos: row.intRank,
-          team: row.strTeam,
-          p: row.intPlayed,
-          w: row.intWin,
-          d: row.intDraw,
-          l: row.intLoss,
-          pts: row.intPoints
-        }));
-      } catch (err) {
-        errors.push(`الترتيب: ${err.message}`);
-      }
-
-      if (errors.length && state.matches.length === 0 && state.standings.length === 0) {
-        noteEl.style.display = 'block';
-        noteEl.textContent = `تنبيه الاتصال: ${errors.join(' | ')}`;
-        statusEl.textContent = 'تنبيه';
-      } else if (errors.length) {
-        noteEl.style.display = 'block';
-        noteEl.textContent = `ملاحظة جزئية: ${errors.join(' | ')}`;
-        statusEl.textContent = 'مباشر • متصل';
-      } else {
-        noteEl.style.display = 'none';
-        statusEl.textContent = 'مباشر • متصل';
-      }
-
-      render();
-    }
-
-    function render() {
-      const q = (document.getElementById('q').value || '').trim().toLowerCase();
-      const view = document.getElementById('view');
-
-      if (state.tab === 'matches') {
-        const list = state.matches.filter(m =>
-          !q || [m.league, m.home, m.away, m.status].some(x => (x || '').toLowerCase().includes(q))
-        );
-        view.innerHTML = list.map(m => `
-          <div class="card">
-            <div class="m-top">
-              <span>${m.league}</span>
-              ${m.live ? `<span class="live-badge"><span class="dot"></span>${m.status}</span>` : `<span>${m.status}</span>`}
-            </div>
-            <div class="m-grid">
-              <div class="team-name">${m.home}</div>
-              <div class="score-box">${m.score}</div>
-              <div class="team-name">${m.away}</div>
-            </div>
-          </div>
-        `).join('') || '<p style="text-align:center;color:var(--muted)">لا توجد مباريات</p>';
-      }
-
-      if (state.tab === 'standings') {
-        const list = state.standings.filter(s => !q || (s.team || '').toLowerCase().includes(q));
-        view.innerHTML = `
-          <div class="card" style="padding:6px">
-            <table>
-              <thead><tr><th>#</th><th style="text-align:right">الفريق</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>نقاط</th></tr></thead>
-              <tbody>
-                ${list.map(s => `
-                  <tr>
-                    <td><b>${s.pos}</b></td>
-                    <td class="t-team">${s.team}</td>
-                    <td>${s.p}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td>
-                    <td><b style="color:var(--acc)">${s.pts}</b></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-      }
-    }
-
-    renderLeagues();
-    refreshAll();
-    setInterval(refreshAll, 60000);
-  </script>
-</body>
-</html>
+    function formatEvent(ev
