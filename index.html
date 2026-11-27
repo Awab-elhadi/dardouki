@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DARDOUKI - أخبار ونتائج وانتقالات</title>
+  <style>
+    :root{
+      --bg:#0b0f19; --card:#131a2a; --card2:#1a243b; --line:#243049;
+      --txt:#f8fafc; --muted:#94a3b8; --acc:#10b981; --live:#ef4444; --gold:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt)}
+    header{background:var(--card);border-bottom:1px solid var(--line);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20}
+    .brand{display:flex;align-items:center;gap:8px;font-weight:900;font-size:18px}
+    .brand span{color:var(--acc)}
+    .sync{font-size:11px;background:rgba(16,185,129,.15);color:var(--acc);padding:4px 9px;border-radius:99px;font-weight:700}
+    .wrap{max-width:760px;margin:auto;padding:10px}
+    .main-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+    .m-tab{background:var(--card);color:var(--muted);border:1px solid var(--line);padding:9px 6px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer}
+    .m-tab.active{background:var(--acc);color:#06281e;border-color:var(--acc)}
+    .leagues{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none}
+    .leagues::-webkit-scrollbar{display:none}
+    .lg-chip{white-space:nowrap;background:var(--card);color:var(--muted);border:1px solid var(--line);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer}
+    .lg-chip.active{background:var(--card2);color:var(--txt);border-color:var(--acc)}
+    .search{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--txt);margin-bottom:10px;font-family:inherit}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+    .m-top{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);margin-bottom:8px}
+    .live-badge{color:var(--live);font-weight:800;display:inline-flex;align-items:center;gap:5px}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--live);animation:blink 1.2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+    .m-grid{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;text-align:center}
+    .team-name{font-weight:800;font-size:14px}
+    .score-box{background:var(--bg);border:1px solid var(--line);padding:6px 12px;border-radius:8px;font-weight:900;font-size:15px;min-width:68px;color:#fff}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line)}
+    th{color:var(--muted);font-size:11px}
+    td.t-team{text-align:right;font-weight:700}
+    .note{font-size:12px;color:var(--gold);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);padding:8px 10px;border-radius:10px;margin-bottom:10px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">⚡ <span>DARDOUKI</span></div>
+    <div class="sync" id="syncStatus">جاري التحميل...</div>
+  </header>
+
+  <div class="wrap">
+    <div class="main-tabs">
+      <button class="m-tab active" onclick="setTab('matches', this)">المباريات</button>
+      <button class="m-tab" onclick="setTab('standings', this)">الترتيب</button>
+      <button class="m-tab" onclick="refreshAll()">تحديث الآن</button>
+    </div>
+
+    <div class="leagues" id="leaguesBar"></div>
+    <input class="search" id="q" placeholder="ابحث عن فريق أو بطولة..." oninput="render()" />
+    <div class="note" id="apiNote" style="display:none"></div>
+    <div id="view"></div>
+  </div>
+
+  <script>
+    const API_KEY = '032338c607274597b2d8acae97ecdae0';
+    const BASE_URL = 'https://api.football-data.org/v4';
+
+    const LEAGUES = [
+      { code: 'PL', name: 'الدوري الإنجليزي' },
+      { code: 'PD', name: 'الدوري الإسباني' },
+      { code: 'CL', name: 'دوري الأبطال' },
+      { code: 'BL1', name: 'الدوري الألماني' },
+      { code: 'SA', name: 'الدوري الإيطالي' }
+    ];
+
+    const state = {
+      tab: 'matches',
+      leagueCode: 'PL',
+      matches: [],
+      standings: []
+    };
+
+    function setTab(tab, btn) {
+      state.tab = tab;
+      document.querySelectorAll('.m-tab').forEach(b => b.classList.remove('active'));
+      if (btn && tab !== 'refresh') btn.classList.add('active');
+      render();
+    }
+
+    function selectLeague(code) {
+      state.leagueCode = code;
+      renderLeagues();
+      refreshAll();
+    }
+
+    function renderLeagues() {
+      document.getElementById('leaguesBar').innerHTML = LEAGUES.map(l =>
+        `<button class="lg-chip ${state.leagueCode === l.code ? 'active' : ''}" onclick="selectLeague('${l.code}')">${l.name}</button>`
+      ).join('');
+    }
+
+    async function apiFetch(endpoint) {
+      const targetUrl = encodeURIComponent(`${BASE_URL}${endpoint}`);
+      const proxyUrl = `https://corsproxy.io/?${targetUrl}`;
+
+      const res = await fetch(proxyUrl, {
+        headers: { 'X-Auth-Token': API_KEY }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    async function refreshAll() {
+      const statusEl = document.getElementById('syncStatus');
+      const noteEl = document.getElementById('apiNote');
+      statusEl.textContent = 'جاري الجلب...';
+
+      try {
+        const [matchesJson, standingsJson] = await Promise.all([
+          apiFetch(`/competitions/${state.leagueCode}/matches`),
+          apiFetch(`/competitions/${state.leagueCode}/standings`)
+        ]);
+
+        const lgName = LEAGUES.find(x => x.code === state.leagueCode)?.name || state.leagueCode;
+        state.matches = (matchesJson.matches || []).slice(-25).reverse().map(m => {
+          const live = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+          const h = m.score?.fullTime?.home;
+          const a = m.score?.fullTime?.away;
+          return {
+            id: m.id,
+            league: lgName,
+            home: m.homeTeam?.shortName || m.homeTeam?.name || 'فريق 1',
+            away: m.awayTeam?.shortName || m.awayTeam?.name || 'فريق 2',
+            score: (h !== null && a !== null && h !== undefined && a !== undefined) ? `${h} - ${a}` : 'vs',
+            status: live ? 'مباشر' : (m.status === 'FINISHED' ? 'انتهت' : new Date(m.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })),
+            live
+          };
+        });
+
+        const mainTable = standingsJson.standings?.find(s => s.type === 'TOTAL')?.table || [];
+        state.standings = mainTable.map(row => ({
+          pos: row.position,
+          team: row.team?.shortName || row.team?.name,
+          p: row.playedGames,
+          w: row.won,
+          d: row.draw,
+          l: row.lost,
+          pts: row.points
+        }));
+
+        noteEl.style.display = 'none';
+        statusEl.textContent = 'مباشر • متصل';
+      } catch (err) {
+        noteEl.style.display = 'block';
+        noteEl.textContent = `تنبيه الاتصال: ${err.message} (قد يحدث حظر CORS في بعض المتصفحات عند الطلب المباشر).`;
+        statusEl.textContent = 'تنبيه';
+      }
+
+      render();
+    }
+
+    function render() {
+      const q = (document.getElementById('q').value || '').trim().toLowerCase();
+      const view = document.getElementById('view');
+
+      if (state.tab === 'matches') {
+        const list = state.matches.filter(m =>
+          !q || [m.league, m.home, m.away, m.status].some(x => (x || '').toLowerCase().includes(q))
+        );
+        view.innerHTML = list.map(m => `
+          <div class="card">
+            <div class="m-top">
+              <span>${m.league}</span>
+              ${m.live ? `<span class="live-badge"><span class="dot"></span>${m.status}</span>` : `<span>${m.status}</span>`}
+            </div>
+            <div class="m-grid">
+              <div class="team-name">${m.home}</div>
+              <div class="score-box">${m.score}</div>
+              <div class="team-name">${m.away}</div>
+            </div>
+          </div>
+        `).join('') || '<p style="text-align:center;color:var(--muted)">لا توجد مباريات</p>';
+      }
+
+      if (state.tab === 'standings') {
+        const list = state.standings.filter(s => !q || (s.team || '').toLowerCase().includes(q));
+        view.innerHTML = `
+          <div class="card" style="padding:6px">
+            <table>
+              <thead><tr><th>#</th><th style="text-align:right">الفريق</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>نقاط</th></tr></thead>
+              <tbody>
+                ${list.map(s => `
+                  <tr>
+                    <td><b>${s.pos}</b></td>
+                    <td class="t-team">${s.team}</td>
+                    <td>${s.p}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td>
+                    <td><b style="color:var(--acc)">${s.pts}</b></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    renderLeagues();
+    refreshAll();
+    setInterval(refreshAll, 60000);
+  </script>
+</body>
+</html>
