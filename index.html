@@ -59,20 +59,19 @@
   </div>
 
   <script>
-    const API_KEY = '032338c607274597b2d8acae97ecdae0';
-    const BASE_URL = 'https://api.football-data.org/v4';
+    const API_BASE = 'https://www.thesportsdb.com/api/v1/json/3';
 
     const LEAGUES = [
-      { code: 'PL', name: 'الدوري الإنجليزي' },
-      { code: 'PD', name: 'الدوري الإسباني' },
-      { code: 'CL', name: 'دوري الأبطال' },
-      { code: 'BL1', name: 'الدوري الألماني' },
-      { code: 'SA', name: 'الدوري الإيطالي' }
+      { code: '4328', name: 'الدوري الإنجليزي', season: '2026-2027' },
+      { code: '4335', name: 'الدوري الإسباني', season: '2026-2027' },
+      { code: '4480', name: 'دوري الأبطال', season: '2026-2027' },
+      { code: '4331', name: 'الدوري الألماني', season: '2026-2027' },
+      { code: '4332', name: 'الدوري الإيطالي', season: '2026-2027' }
     ];
 
     const state = {
       tab: 'matches',
-      leagueCode: 'PL',
+      leagueCode: '4328',
       matches: [],
       standings: []
     };
@@ -96,64 +95,45 @@
       ).join('');
     }
 
-    function buildProxyCandidates(fullUrl) {
-      const encoded = encodeURIComponent(fullUrl);
-      return [
-        {
-          name: 'allorigins',
-          url: `https://api.allorigins.win/raw?url=${encoded}`,
-          headers: { 'X-Auth-Token': API_KEY }
-        },
-        {
-          name: 'corsproxy',
-          url: `https://corsproxy.io/?${encoded}`,
-          headers: { 'X-Auth-Token': API_KEY }
-        },
-        {
-          name: 'codetabs',
-          url: `https://api.codetabs.com/v1/proxy/?quest=${encoded}`,
-          headers: { 'X-Auth-Token': API_KEY }
-        },
-        {
-          name: 'direct',
-          url: fullUrl,
-          headers: { 'X-Auth-Token': API_KEY }
-        }
-      ];
+    async function fetchJson(url) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 9000);
+      try {
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timer);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      } catch (err) {
+        clearTimeout(timer);
+        throw new Error(err.name === 'AbortError' ? 'انتهت المهلة' : err.message);
+      }
     }
 
-    async function apiFetch(endpoint) {
-      const fullUrl = `${BASE_URL}${endpoint}`;
-      const candidates = buildProxyCandidates(fullUrl);
-      const errors = [];
+    function formatEvent(ev, lgName, isUpcoming) {
+      const hScore = ev.intHomeScore;
+      const aScore = ev.intAwayScore;
+      const hasScore = hScore !== null && aScore !== null && hScore !== undefined && aScore !== undefined && hScore !== '' && aScore !== '';
+      const statusStr = (ev.strStatus || '').toUpperCase();
+      const live = ['1H', '2H', 'HT', 'ET', 'P', 'LIVE'].includes(statusStr);
 
-      for (const item of candidates) {
-        try {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 9000);
-
-          const res = await fetch(item.url, {
-            headers: item.headers,
-            signal: controller.signal
-          });
-          clearTimeout(timer);
-
-          if (!res.ok) {
-            throw new Error(`${item.name}: HTTP ${res.status}`);
-          }
-
-          const text = await res.text();
-          try {
-            return JSON.parse(text);
-          } catch {
-            throw new Error(`${item.name}: رد غير صالح (ليس JSON)`);
-          }
-        } catch (err) {
-          errors.push(err.name === 'AbortError' ? `${item.name}: انتهت المهلة` : err.message);
-        }
+      let displayStatus = ev.dateEvent || 'مجدولة';
+      if (live) {
+        displayStatus = 'مباشر';
+      } else if (hasScore || statusStr === 'FT' || statusStr === 'AET' || statusStr === 'PEN') {
+        displayStatus = 'انتهت';
+      } else if (ev.strTime) {
+        displayStatus = `${ev.dateEvent || ''} ${ev.strTime.slice(0, 5)}`.trim();
       }
 
-      throw new Error(errors.join(' | ') || 'تعذر الوصول إلى المصدر');
+      return {
+        id: ev.idEvent || `${ev.strHomeTeam}-${ev.strAwayTeam}-${ev.dateEvent}`,
+        league: lgName,
+        home: ev.strHomeTeam || 'فريق 1',
+        away: ev.strAwayTeam || 'فريق 2',
+        score: hasScore ? `${hScore} - ${aScore}` : (isUpcoming ? 'vs' : '-'),
+        status: displayStatus,
+        live
+      };
     }
 
     async function refreshAll() {
@@ -161,45 +141,57 @@
       const noteEl = document.getElementById('apiNote');
       statusEl.textContent = 'جاري الجلب...';
 
+      const lgObj = LEAGUES.find(x => x.code === state.leagueCode) || LEAGUES[0];
+      const errors = [];
+
       try {
-        const [matchesJson, standingsJson] = await Promise.all([
-          apiFetch(`/competitions/${state.leagueCode}/matches`),
-          apiFetch(`/competitions/${state.leagueCode}/standings`)
+        const [lastRes, nextRes] = await Promise.allSettled([
+          fetchJson(`${API_BASE}/eventslast.php?id=${lgObj.code}`),
+          fetchJson(`${API_BASE}/eventsnextleague.php?id=${lgObj.code}`)
         ]);
 
-        const lgName = LEAGUES.find(x => x.code === state.leagueCode)?.name || state.leagueCode;
-        state.matches = (matchesJson.matches || []).slice(-25).reverse().map(m => {
-          const live = m.status === 'IN_PLAY' || m.status === 'PAUSED';
-          const h = m.score?.fullTime?.home;
-          const a = m.score?.fullTime?.away;
-          return {
-            id: m.id,
-            league: lgName,
-            home: m.homeTeam?.shortName || m.homeTeam?.name || 'فريق 1',
-            away: m.awayTeam?.shortName || m.awayTeam?.name || 'فريق 2',
-            score: (h !== null && a !== null && h !== undefined && a !== undefined) ? `${h} - ${a}` : 'vs',
-            status: live ? 'مباشر' : (m.status === 'FINISHED' ? 'انتهت' : new Date(m.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })),
-            live
-          };
-        });
+        const nextEvents = nextRes.status === 'fulfilled' ? (nextRes.value?.events || []) : [];
+        const lastEvents = lastRes.status === 'fulfilled' ? (lastRes.value?.results || []) : [];
 
-        const mainTable = standingsJson.standings?.find(s => s.type === 'TOTAL')?.table || [];
-        state.standings = mainTable.map(row => ({
-          pos: row.position,
-          team: row.team?.shortName || row.team?.name,
-          p: row.playedGames,
-          w: row.won,
-          d: row.draw,
-          l: row.lost,
-          pts: row.points
+        if (nextRes.status === 'rejected') errors.push(`القادمة: ${nextRes.reason.message}`);
+        if (lastRes.status === 'rejected') errors.push(`السابقة: ${lastRes.reason.message}`);
+
+        const combined = [
+          ...nextEvents.slice(0, 12).map(ev => formatEvent(ev, lgObj.name, true)),
+          ...lastEvents.slice(0, 15).reverse().map(ev => formatEvent(ev, lgObj.name, false))
+        ];
+        state.matches = combined;
+      } catch (err) {
+        errors.push(err.message);
+      }
+
+      try {
+        const tableRes = await fetchJson(`${API_BASE}/lookuptable.php?l=${lgObj.code}&s=${encodeURIComponent(lgObj.season)}`);
+        const rows = tableRes?.table || [];
+        state.standings = rows.map(row => ({
+          pos: row.intRank,
+          team: row.strTeam,
+          p: row.intPlayed,
+          w: row.intWin,
+          d: row.intDraw,
+          l: row.intLoss,
+          pts: row.intPoints
         }));
+      } catch (err) {
+        errors.push(`الترتيب: ${err.message}`);
+      }
 
+      if (errors.length && state.matches.length === 0 && state.standings.length === 0) {
+        noteEl.style.display = 'block';
+        noteEl.textContent = `تنبيه الاتصال: ${errors.join(' | ')}`;
+        statusEl.textContent = 'تنبيه';
+      } else if (errors.length) {
+        noteEl.style.display = 'block';
+        noteEl.textContent = `ملاحظة جزئية: ${errors.join(' | ')}`;
+        statusEl.textContent = 'مباشر • متصل';
+      } else {
         noteEl.style.display = 'none';
         statusEl.textContent = 'مباشر • متصل';
-      } catch (err) {
-        noteEl.style.display = 'block';
-        noteEl.textContent = `تنبيه الاتصال: ${err.message}`;
-        statusEl.textContent = 'تنبيه';
       }
 
       render();
