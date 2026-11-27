@@ -67,7 +67,6 @@
   </div>
 
   <script>
-    var NINJAS_API_KEY = '8GfktW80IcFGeHARH8YjwY20AG6WvqbkyManYSTQ';
     var AUTO_SYNC_MS = 90000;
     var REQUEST_TIMEOUT_MS = 12000;
     var laligaMatches = [];
@@ -84,44 +83,29 @@
       return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(home + ' vs ' + away);
     }
 
-    function formatTimeFromIso(isoStr) {
-      if (!isoStr) return '';
-      var dt = new Date(isoStr);
-      if (isNaN(dt.getTime())) return String(isoStr).slice(11, 16);
-      var h = String(dt.getHours()).padStart(2, '0');
-      var min = String(dt.getMinutes()).padStart(2, '0');
-      return h + ':' + min;
-    }
-
-    function parseNinjasMatches(data) {
-      var arr = Array.isArray(data) ? data : (data && Array.isArray(data.matches) ? data.matches : []);
+    function parseSportsDbEvents(data) {
+      var events = (data && Array.isArray(data.events)) ? data.events : [];
       var list = [];
-      for (var i = 0; i < arr.length; i++) {
-        var item = arr[i] || {};
-        var home = (item.home_team && item.home_team.name) || item.home_team || item.home || 'فريق 1';
-        var away = (item.away_team && item.away_team.name) || item.away_team || item.away || 'فريق 2';
-        var venueName = (item.venue && item.venue.name) ? item.venue.name : '';
-        var venueCity = (item.venue && item.venue.city) ? item.venue.city : '';
-        var venueSub = venueName ? (venueName + (venueCity ? (' • ' + venueCity) : '')) : (item.date || '');
+      for (var i = 0; i < events.length; i++) {
+        var ev = events[i] || {};
+        var home = ev.strHomeTeam || 'فريق 1';
+        var away = ev.strAwayTeam || 'فريق 2';
+        var hasScore = ev.intHomeScore !== null && ev.intHomeScore !== undefined && ev.intHomeScore !== '' &&
+                       ev.intAwayScore !== null && ev.intAwayScore !== undefined && ev.intAwayScore !== '';
+        var clock = ev.strTime ? String(ev.strTime).slice(0, 5) : '';
+        var statusRaw = ev.strStatus ? String(ev.strStatus) : '';
+        var stLower = statusRaw.toLowerCase();
+        var isLive = stLower.indexOf('live') !== -1 || stLower.indexOf('1h') !== -1 || stLower.indexOf('2h') !== -1;
 
-        var hScore = item.home_score;
-        var aScore = item.away_score;
-        var hasScore = hScore !== undefined && hScore !== null && hScore !== '' && aScore !== undefined && aScore !== null && aScore !== '';
-        var startClock = formatTimeFromIso(item.start_time || '');
-        var rawStatus = item.status ? String(item.status) : '';
-        var stLower = rawStatus.toLowerCase();
-        var isLive = stLower.indexOf('live') !== -1 || stLower.indexOf('in_progress') !== -1;
-
-        var statusLabel = 'مجدولة';
+        var statusLabel = clock ? ('مجدولة • ' + clock) : 'مجدولة';
         if (isLive) statusLabel = 'مباشر';
-        else if (rawStatus === 'scheduled') statusLabel = startClock ? ('مجدولة • ' + startClock) : 'مجدولة';
-        else if (rawStatus) statusLabel = rawStatus;
+        else if (statusRaw === 'Match Finished' || statusRaw === 'FT') statusLabel = 'انتهت';
 
         list.push({
           home: String(home),
           away: String(away),
-          sub: venueSub,
-          score: hasScore ? (hScore + ' - ' + aScore) : (startClock || 'vs'),
+          sub: ev.dateEvent || '',
+          score: hasScore ? (ev.intHomeScore + ' - ' + ev.intAwayScore) : (clock || 'vs'),
           status: statusLabel,
           isLive: isLive,
           watchUrl: buildWatchUrl(String(home), String(away))
@@ -130,26 +114,15 @@
       return list;
     }
 
-    function fetchJsonWithTimeout(url, headers, timeoutMs) {
+    function fetchJsonWithTimeout(url, timeoutMs) {
       return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.timeout = timeoutMs;
-        if (headers) {
-          for (var k in headers) {
-            if (Object.prototype.hasOwnProperty.call(headers, k)) {
-              xhr.setRequestHeader(k, headers[k]);
-            }
-          }
-        }
         xhr.onload = function () {
           if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
             try {
-              var obj = JSON.parse(xhr.responseText);
-              if (obj && typeof obj.contents === 'string') {
-                obj = JSON.parse(obj.contents);
-              }
-              resolve(obj);
+              resolve(JSON.parse(xhr.responseText));
             } catch (e) {
               reject(new Error('PARSE_ERROR'));
             }
@@ -167,47 +140,27 @@
       });
     }
 
-    function fetchLaligaData() {
-      var targetUrl = 'https://api.api-ninjas.com/v1/soccermatches?league=laliga';
-      var headers = { 'X-Api-Key': NINJAS_API_KEY };
-      var candidates = [
-        { url: targetUrl, hdr: headers },
-        { url: 'https://corsproxy.io/?' + encodeURIComponent(targetUrl), hdr: headers },
-        { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl), hdr: null }
-      ];
-
-      var idx = 0;
-      function nextAttempt() {
-        if (idx >= candidates.length) {
-          return Promise.reject(new Error('NETWORK_ERROR'));
-        }
-        var c = candidates[idx++];
-        return fetchJsonWithTimeout(c.url, c.hdr, REQUEST_TIMEOUT_MS).catch(function () {
-          return nextAttempt();
-        });
-      }
-
-      return nextAttempt();
-    }
-
     function loadLaliga() {
       var badge = document.getElementById('syncBadge');
       var msg = document.getElementById('msgBox');
+      var today = getTodayIso();
 
       badge.innerHTML = 'جاري التحديث...';
-      fetchLaligaData().then(function (parsed) {
-        laligaMatches = parseNinjasMatches(parsed);
+      var reqUrl = 'https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=' + encodeURIComponent(today) + '&l=Spanish%20La%20Liga';
+
+      fetchJsonWithTimeout(reqUrl, REQUEST_TIMEOUT_MS).then(function (parsed) {
+        laligaMatches = parseSportsDbEvents(parsed);
         badge.innerHTML = 'محدّث • كل 90 ث';
         msg.style.display = laligaMatches.length ? 'none' : 'block';
         if (!laligaMatches.length) {
-          msg.innerHTML = 'لم يرجع API Ninjas مباريات للدوري الإسباني حالياً.';
+          msg.innerHTML = 'لا توجد مباريات مسجلة للدوري الإسباني بتاريخ اليوم (' + today + ').';
         }
         renderList();
       }).catch(function (err) {
         var reason = err && err.message ? err.message : 'NETWORK_ERROR';
         badge.innerHTML = reason === 'TIMEOUT' ? 'انتهت المهلة' : 'غير متاح';
         msg.style.display = 'block';
-        msg.innerHTML = 'تعذر جلب مباريات الدوري الإسباني (' + reason + ')، سيعاد المحاولة كل 90 ثانية.';
+        msg.innerHTML = 'تعذر الاتصال بمصدر المباريات (' + reason + ')، سيعاد المحاولة كل 90 ثانية.';
         renderList();
       });
     }
