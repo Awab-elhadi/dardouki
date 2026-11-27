@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DARDOUKI - المباريات والترتيب والتفاصيل</title>
+  <title>DARDOUKI - المباريات والترتيب والتشكيلة</title>
   <style>
     :root{
       --bg:#0b0f19; --card:#131a2a; --card2:#1a243b; --line:#243049;
       --txt:#f8fafc; --muted:#94a3b8; --acc:#10b981; --gold:#f59e0b; --err:#f87171;
+      --pitch1:#14532d; --pitch2:#166534;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt)}
@@ -19,14 +20,11 @@
     .main-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
     .m-tab{background:var(--card);color:var(--muted);border:1px solid var(--line);padding:10px 6px;border-radius:10px;font-weight:800;font-size:13px}
     .m-tab.active{background:var(--acc);color:#06281e;border-color:var(--acc)}
-    .sub-filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px}
-    .f-chip{white-space:nowrap;background:var(--card);color:var(--muted);border:1px solid var(--line);padding:6px 11px;border-radius:99px;font-size:11px;font-weight:700}
-    .f-chip.active{background:var(--acc);color:#06281e;border-color:var(--acc)}
     .leagues{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px}
     .lg-chip{white-space:nowrap;background:var(--card);color:var(--muted);border:1px solid var(--line);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700}
     .lg-chip.active{background:var(--card2);color:var(--txt);border-color:var(--acc)}
     .search{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--txt);margin-bottom:8px}
-    .info-bar{font-size:11px;color:var(--gold);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);padding:7px 10px;border-radius:10px;margin-bottom:10px;line-height:1.5}
+    .notice{font-size:12px;color:var(--gold);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);padding:9px 11px;border-radius:10px;margin-bottom:10px;line-height:1.6}
     .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
     .m-top{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);margin-bottom:8px;gap:8px}
     .m-grid{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;text-align:center}
@@ -40,20 +38,99 @@
     th{color:var(--muted);font-size:11px}
     td.t-team{text-align:right;font-weight:700}
 
-    /* نافذة تفاصيل المباراة */
-    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:50;padding:12px;overflow-y:auto}
-    .modal-box{max-width:740px;margin:12px auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+    /* نافذة التفاصيل ومخطط الملعب */
+    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:50;padding:10px;overflow-y:auto}
+    .modal-box{max-width:740px;margin:10px auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
     .modal-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}
     .modal-title{font-weight:900;font-size:15px}
     .close-btn{background:var(--card2);color:var(--txt);border:1px solid var(--line);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:800}
+    .team-switch{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+    .sw-btn{background:var(--bg);color:var(--muted);border:1px solid var(--line);padding:8px;border-radius:9px;font-weight:800;font-size:12px}
+    .sw-btn.active{background:var(--acc);color:#06281e;border-color:var(--acc)}
+
+    .pitch{
+      position:relative;
+      background:repeating-linear-gradient(
+        to bottom,
+        var(--pitch1) 0%,
+        var(--pitch1) 16.6%,
+        var(--pitch2) 16.6%,
+        var(--pitch2) 33.2%
+      );
+      border:2px solid rgba(255,255,255,.45);
+      border-radius:12px;
+      padding:14px 8px;
+      margin-bottom:12px;
+      min-height:360px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .pitch-midline{
+      position:absolute;
+      top:50%;
+      left:8px;
+      right:8px;
+      height:1px;
+      background:rgba(255,255,255,.28);
+      pointer-events:none;
+    }
+    .pitch-circle{
+      position:absolute;
+      top:50%;
+      left:50%;
+      width:74px;
+      height:74px;
+      transform:translate(-50%,-50%);
+      border:1px solid rgba(255,255,255,.28);
+      border-radius:50%;
+      pointer-events:none;
+    }
+    .pitch-row{
+      position:relative;
+      z-index:2;
+      display:flex;
+      justify-content:space-around;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:6px;
+      margin:4px 0;
+    }
+    .player-node{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      max-width:86px;
+      text-align:center;
+    }
+    .jersey{
+      width:30px;
+      height:30px;
+      border-radius:50%;
+      background:#0f172a;
+      border:2px solid #ffffff;
+      color:#ffffff;
+      font-size:11px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:3px;
+    }
+    .p-name{
+      background:rgba(11,15,25,.82);
+      color:#fff;
+      font-size:10px;
+      font-weight:700;
+      padding:2px 6px;
+      border-radius:6px;
+      line-height:1.3;
+      word-break:break-word;
+    }
     .d-section{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
     .d-sec-title{font-size:12px;font-weight:900;color:var(--acc);margin-bottom:8px}
-    .d-two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .d-team-box{background:var(--card2);border-radius:8px;padding:8px}
-    .d-team-h{font-size:12px;font-weight:800;margin-bottom:6px;color:#fff}
     .d-list{margin:0;padding-right:16px;font-size:12px;color:var(--txt);line-height:1.7}
     .d-inj{color:var(--err)}
-    @media(max-width:560px){.d-two-col{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -66,226 +143,49 @@
     <div class="main-tabs">
       <button type="button" class="m-tab active" id="btnMatches" onclick="switchTab('matches')">المباريات</button>
       <button type="button" class="m-tab" id="btnStandings" onclick="switchTab('standings')">الترتيب</button>
-      <button type="button" class="m-tab" id="btnRefresh" onclick="doRefresh()">تحديث الآن</button>
-    </div>
-
-    <div class="sub-filters" id="timeFilters">
-      <button type="button" class="f-chip active" id="tf_all" onclick="pickTimeFilter('all')">الكل</button>
-      <button type="button" class="f-chip" id="tf_today" onclick="pickTimeFilter('today')">مباريات اليوم</button>
-      <button type="button" class="f-chip" id="tf_tomorrow" onclick="pickTimeFilter('tomorrow')">مباريات الغد</button>
-      <button type="button" class="f-chip" id="tf_upcoming" onclick="pickTimeFilter('upcoming')">القادمة</button>
-      <button type="button" class="f-chip" id="tf_past" onclick="pickTimeFilter('past')">السابقة</button>
+      <button type="button" class="m-tab" id="btnRefresh" onclick="syncCurrentLeague()">تحديث الآن</button>
     </div>
 
     <div class="leagues" id="leaguesBar"></div>
-    <input class="search" id="q" placeholder="ابحث عن فريق (مثال: أرسنال، ريال مدريد، الهلال، الأهلي) أو بطولة..." onkeyup="renderAll()" />
-    <div class="info-bar" id="infoBar">يعرض الجدول مباريات اليوم والغد والسابقة والقادمة مع تفاصيل التشكيلة والاحتياط والإصابات.</div>
+    <input class="search" id="q" placeholder="ابحث عن فريق أو بطولة..." onkeyup="renderAll()" />
+    <div class="notice" id="noticeBox">يتم جلب البيانات مباشرة من المصدر الرياضي دون أي بيانات وهمية أو قديمة.</div>
     <div id="view"></div>
   </div>
 
-  <!-- نافذة تفاصيل المباراة -->
   <div class="modal-backdrop" id="detailsModal" onclick="backdropClose(event)">
     <div class="modal-box" id="detailsContent"></div>
   </div>
 
   <script>
     var currentTab = 'matches';
-    var currentLeague = 'ALL';
-    var currentTimeFilter = 'all';
-
-    function formatDateOffset(daysOffset) {
-      var d = new Date();
-      d.setDate(d.getDate() + daysOffset);
-      var yyyy = d.getFullYear();
-      var mm = String(d.getMonth() + 1).padStart(2, '0');
-      var dd = String(d.getDate()).padStart(2, '0');
-      return yyyy + '-' + mm + '-' + dd;
-    }
-
-    var TODAY_STR = formatDateOffset(0);
-    var TOMORROW_STR = formatDateOffset(1);
-    var YESTERDAY_STR = formatDateOffset(-1);
+    var currentLeague = 'bl1';
+    var activeModalMatch = null;
+    var activeTeamSide = 'home';
 
     var LEAGUES = [
-      { code: 'ALL', name: 'كل الدوريات' },
-      { code: 'PL', name: 'الدوري الإنجليزي' },
-      { code: 'PD', name: 'الدوري الإسباني' },
-      { code: 'CL', name: 'دوري الأبطال' },
-      { code: 'BL1', name: 'الدوري الألماني' },
-      { code: 'SA', name: 'الدوري الإيطالي' },
-      { code: 'FL1', name: 'الدوري الفرنسي' },
-      { code: 'SPL', name: 'الدوري السعودي' },
-      { code: 'EGY', name: 'الدوري المصري' }
+      { code: 'bl1', name: 'الدوري الألماني', openligaShortcut: 'bl1', openligaSeason: '2026', tsdbId: '4331', tsdbSeason: '2026-2027' },
+      { code: 'pl', name: 'الدوري الإنجليزي', openligaShortcut: '', openligaSeason: '', tsdbId: '4328', tsdbSeason: '2026-2027' },
+      { code: 'pd', name: 'الدوري الإسباني', openligaShortcut: '', openligaSeason: '', tsdbId: '4335', tsdbSeason: '2026-2027' },
+      { code: 'cl', name: 'دوري الأبطال', openligaShortcut: '', openligaSeason: '', tsdbId: '4480', tsdbSeason: '2026-2027' },
+      { code: 'sa', name: 'الدوري الإيطالي', openligaShortcut: '', openligaSeason: '', tsdbId: '4332', tsdbSeason: '2026-2027' },
+      { code: 'spl', name: 'الدوري السعودي', openligaShortcut: '', openligaSeason: '', tsdbId: '4668', tsdbSeason: '2026-2027' },
+      { code: 'egy', name: 'الدوري المصري', openligaShortcut: '', openligaSeason: '', tsdbId: '4498', tsdbSeason: '2026-2027' }
     ];
 
-    var MATCHES = [
-      {
-        id: 'm1', leagueCode: 'PL', league: 'الدوري الإنجليزي',
-        home: 'أرسنال', away: 'ليفربول', score: '2 - 1',
-        status: 'انتهت', kind: 'past', date: YESTERDAY_STR, time: '22:00',
-        stadium: 'ملعب الإمارات', referee: 'مايكل أوليفر',
-        homeFormation: '4-3-3', awayFormation: '4-2-3-1',
-        homeLineup: ['رايا', 'وايت', 'ساليبا', 'غابرييل', 'كالافيوري', 'رايس', 'أوديغارد', 'بارتي', 'ساكا', 'هافرتز', 'مارتينيلي'],
-        awayLineup: ['أليسون', 'أرنولد', 'كوناتي', 'فان دايك', 'روبرتسون', 'ماك أليستر', 'غرافينبيرخ', 'صلاح', 'سوبوسلاي', 'دياز', 'نونيز'],
-        homeBench: ['تروسارد', 'جورجينيو', 'تومياسو', 'نورغارد', 'نيتز'],
-        awayBench: ['كيليهر', 'غاكبو', 'إندو', 'جونز', 'إليوت'],
-        homeInjuries: ['تيمبر (إصابة عضلية)', 'ميرينو (غير جاهز بدنياً)'],
-        awayInjuries: ['كييزا (إصابة طفيفة)']
-      },
-      {
-        id: 'm2', leagueCode: 'PL', league: 'الدوري الإنجليزي',
-        home: 'مانشستر سيتي', away: 'تشيلسي', score: 'vs',
-        status: 'مباراة اليوم', kind: 'today', date: TODAY_STR, time: '20:30',
-        stadium: 'ملعب الاتحاد', referee: 'أنتوني تايلور',
-        homeFormation: '4-1-4-1', awayFormation: '4-2-3-1',
-        homeLineup: ['إيدرسون', 'ووكر', 'ستونز', 'دياز', 'غفارديول', 'رودري', 'سيلفا', 'فودين', 'دي بروين', 'دوكو', 'هالاند'],
-        awayLineup: ['سانشيز', 'غوستو', 'فوفانا', 'كولويل', 'كوكوريلا', 'كايسيدو', 'إنزو', 'بالمر', 'مادويكي', 'نيتو', 'جاكسون'],
-        homeBench: ['كوفاسيتش', 'غريليش', 'أكانجي', 'سافينيو', 'لويس'],
-        awayBench: ['نكونكو', 'فيليكس', 'لافيا', 'بادياشيل', 'أدارابيويو'],
-        homeInjuries: ['آكي (إصابة في الفخذ)'],
-        awayInjuries: ['رييس جيمس (إصابة عضلية)']
-      },
-      {
-        id: 'm3', leagueCode: 'PL', league: 'الدوري الإنجليزي',
-        home: 'مانشستر يونايتد', away: 'توتنهام', score: 'vs',
-        status: 'مباراة الغد', kind: 'tomorrow', date: TOMORROW_STR, time: '18:00',
-        stadium: 'أولد ترافورد', referee: 'كريس كافانا',
-        homeFormation: '3-4-2-1', awayFormation: '4-3-3',
-        homeLineup: ['أونانا', 'دي ليخت', 'ماغواير', 'مارتينيز', 'دالوت', 'أوغارتي', 'ماينو', 'مزراوي', 'برونو', 'غارناتشو', 'هويلوند'],
-        awayLineup: ['فيكاريو', 'بورو', 'روميرو', 'فان دي فين', 'أودوجي', 'بينتانكور', 'سار', 'ماديسون', 'جونسون', 'سون', 'سولانكي'],
-        homeBench: ['راشفورد', 'إريكسن', 'كاسيميرو', 'زيركزي', 'ليندلوف'],
-        awayBench: ['تيل', 'بيسوما', 'دراغوسين', 'بيرغفال', 'ريتشارليسون'],
-        homeInjuries: ['شاو (إصابة في ربلة الساق)', 'مالاسيا (تأهيل)'],
-        awayInjuries: ['أودوبرت (إصابة في أوتار الركبة)']
-      },
-      {
-        id: 'm4', leagueCode: 'PD', league: 'الدوري الإسباني',
-        home: 'ريال مدريد', away: 'برشلونة', score: '1 - 1',
-        status: 'انتهت', kind: 'past', date: YESTERDAY_STR, time: '23:00',
-        stadium: 'سانتياغو برنابيو', referee: 'خيل مانزانو',
-        homeFormation: '4-3-3', awayFormation: '4-2-3-1',
-        homeLineup: ['كورتوا', 'كارفاخال', 'ميليتاو', 'روديغر', 'ميندي', 'فالفيردي', 'تشواميني', 'بيلينغهام', 'رودريغو', 'مبابي', 'فينيسيوس'],
-        awayLineup: ['بينا', 'كوندي', 'كوبارسي', 'إينيغو', 'بالدي', 'كاسادو', 'بيدري', 'لامين يامال', 'أولمو', 'رافينيا', 'ليفاندوفسكي'],
-        homeBench: ['مودريتش', 'براهيم دياز', 'غuler', 'كامافينغا', 'لوكاس فاسكيز'],
-        awayBench: ['غافي', 'فيرمين لوبيز', 'توريس', 'باو فيكتور', 'مارتن'],
-        homeInjuries: ['ألابا (تأهيل الركبة)'],
-        awayInjuries: ['تير شتيغن (إصابة طويلة)', 'أراوخو (إصابة عضلية)']
-      },
-      {
-        id: 'm5', leagueCode: 'PD', league: 'الدوري الإسباني',
-        home: 'أتلتيكو مدريد', away: 'إشبيلية', score: 'vs',
-        status: 'مباراة اليوم', kind: 'today', date: TODAY_STR, time: '22:00',
-        stadium: 'سيفيتاس ميتروبوليتانو', referee: 'سوتو غرادو',
-        homeFormation: '4-4-2', awayFormation: '4-3-3',
-        homeLineup: ['أوبلاك', 'مولينا', 'خيمينيز', 'لو نورماند', 'غالان', 'دي بول', 'كوكي', 'باريوس', 'لينو', 'غريزمان', 'ألفاريز'],
-        awayLineup: ['نيلاند', 'كارمونا', 'بادي', 'ماركاو', 'بيدروسا', 'سولو', 'أغومي', 'ساؤول', 'لوكباكيو', 'روميرو', 'إيهيناتشو'],
-        homeBench: ['سورلوث', 'كوريا', 'ريكللمي', 'فيتسل', 'أزبيليكويتا'],
-        awayBench: ['سوسو', 'خوانلو', 'باركو', 'غوديل', 'إيزاك'],
-        homeInjuries: ['لا توجد إصابات مؤثرة حالياً'],
-        awayInjuries: ['ساندرو (إصابة عضلية)']
-      },
-      {
-        id: 'm6', leagueCode: 'CL', league: 'دوري الأبطال',
-        home: 'بايرن ميونخ', away: 'إنتر ميلان', score: '2 - 0',
-        status: 'انتهت', kind: 'past', date: YESTERDAY_STR, time: '23:00',
-        stadium: 'أليانز أرينا', referee: 'كليمان توربان',
-        homeFormation: '4-2-3-1', awayFormation: '3-5-2',
-        homeLineup: ['نوير', 'كيميش', 'أوباميكانو', 'كيم مين جاي', 'ديفيز', 'بافلوفيتش', 'غوريتسكا', 'أوليسي', 'موسيالا', 'غ نابري', 'هاري كين'],
-        awayLineup: ['سومر', 'بافارد', 'أتشرربي', 'باستوني', 'دومفريس', 'باريلا', 'تشالهانوغلو', 'مخيتاريان', 'ديماركو', 'تورام', 'لاوتارو'],
-        homeBench: ['مولر', 'ساني', 'كومان', 'بالينيا', 'غيريرو'],
-        awayBench: ['فراتيسي', 'تاريمي', 'أصلاني', 'دارميان', 'دي فري'],
-        homeInjuries: ['إيتو (إصابة في القدم)'],
-        awayInjuries: ['بوكانان (تأهيل)']
-      },
-      {
-        id: 'm7', leagueCode: 'SPL', league: 'الدوري السعودي',
-        home: 'الهلال', away: 'النصر', score: '2 - 1',
-        status: 'انتهت', kind: 'past', date: YESTERDAY_STR, time: '20:00',
-        stadium: 'المملكة أرينا', referee: 'خليل أوموت ميلر',
-        homeFormation: '4-2-3-1', awayFormation: '4-2-3-1',
-        homeLineup: ['بونو', 'كانسيلو', 'كوليبالي', 'البليهي', 'اللودي', 'نيفيز', 'سافيتش', 'ميشيل', 'سالم الدوسري', 'مالكوم', 'ميتروفيتش'],
-        awayLineup: ['بينتو', 'الغنام', 'لابورت', 'سيماكان', 'بوشل', 'الخيبري', 'بروزوفيتش', 'تاليسكا', 'أوتافيو', 'ماني', 'رونالدو'],
-        homeBench: ['الحمدان', 'كنو', 'تمبكتي', 'الشهري', 'العويس'],
-        awayBench: ['يحيى', 'غريب', 'النجعي', 'الحسن', 'العقيدي'],
-        homeInjuries: ['نيمار (تجهيز بدني تدريجي)'],
-        awayInjuries: ['لا توجد إصابات معلنة']
-      },
-      {
-        id: 'm8', leagueCode: 'SPL', league: 'الدوري السعودي',
-        home: 'الاتحاد', away: 'الأهلي السعودي', score: 'vs',
-        status: 'مباراة اليوم', kind: 'today', date: TODAY_STR, time: '20:00',
-        stadium: 'الإنماء (الجوهرة)', referee: 'فيصل البلوي',
-        homeFormation: '4-3-3', awayFormation: '4-2-3-1',
-        homeLineup: ['رايكوفيتش', 'الشنقيطي', 'بيريرا', 'الموسى', 'ميتاي', 'فابينيو', 'كانتي', 'عوار', 'ديابي', 'بيرغوين', 'بنزيما'],
-        awayLineup: ['ميندي', 'المجرشي', 'ديميرال', 'إيبانيز', 'العليان', 'كيسي', 'الجهني', 'محرز', 'فيرمينو', 'فيغا', 'توني'],
-        homeBench: ['العمري', 'فلاته', 'العبود', 'الشهري', 'المحاسنة'],
-        awayBench: ['البريك', 'سميحان', 'الرشيدي', 'الراشد', 'الصبياني'],
-        homeInjuries: ['لا توجد إصابات مؤثرة'],
-        awayInjuries: ['لا توجد إصابات مؤثرة']
-      },
-      {
-        id: 'm9', leagueCode: 'EGY', league: 'الدوري المصري',
-        home: 'الأهلي', away: 'الزمالك', score: '1 - 0',
-        status: 'انتهت', kind: 'past', date: YESTERDAY_STR, time: '21:00',
-        stadium: 'ستاد القاهرة الدولي', referee: 'محمود البنا',
-        homeFormation: '4-3-3', awayFormation: '4-2-3-1',
-        homeLineup: ['الشناوي', 'هاني', 'ربيعة', 'داري', 'عطية الله', 'مروان عطية', 'إمام عاشور', 'أكرم توفيق', 'بيرسي تاو', 'حسين الشحات', 'وسام أبو علي'],
-        awayLineup: ['عواد', 'عمر جابر', 'المثلوثي', 'حسام عبد المجيد', 'بنتايك', 'دونغا', 'عبد الله السعيد', 'زيزو', 'شيكابالا', 'مصطفى شلبي', 'سيف الجزيري'],
-        homeBench: ['أفشة', 'كهربا', 'كوكا', 'طاهر محمد', 'ياسر إبراهيم'],
-        awayBench: ['ناصر منسي', 'ميشالاك', 'شحاتة', 'الزناري', 'صبحي'],
-        homeInjuries: ['علي معلول (تأهيل)'],
-        awayInjuries: ['لا توجد إصابات مؤثرة']
+    var matchesByLeague = {};
+    var standingsByLeague = {};
+
+    function getLeagueObj(code) {
+      for (var i = 0; i < LEAGUES.length; i++) {
+        if (LEAGUES[i].code === code) return LEAGUES[i];
       }
-    ];
-
-    var STANDINGS = {
-      PL: [
-        { pos: 1, team: 'ليفربول', p: 12, w: 9, d: 2, l: 1, pts: 29 },
-        { pos: 2, team: 'أرسنال', p: 12, w: 8, d: 3, l: 1, pts: 27 },
-        { pos: 3, team: 'مانشستر سيتي', p: 12, w: 8, d: 2, l: 2, pts: 26 },
-        { pos: 4, team: 'تشيلسي', p: 12, w: 7, d: 3, l: 2, pts: 24 }
-      ],
-      PD: [
-        { pos: 1, team: 'برشلونة', p: 12, w: 10, d: 1, l: 1, pts: 31 },
-        { pos: 2, team: 'ريال مدريد', p: 12, w: 8, d: 3, l: 1, pts: 27 },
-        { pos: 3, team: 'أتلتيكو مدريد', p: 12, w: 7, d: 4, l: 1, pts: 25 },
-        { pos: 4, team: 'إشبيلية', p: 12, w: 5, d: 3, l: 4, pts: 18 }
-      ],
-      CL: [
-        { pos: 1, team: 'بايرن ميونخ', p: 4, w: 3, d: 0, l: 1, pts: 9 },
-        { pos: 2, team: 'إنتر ميلان', p: 4, w: 3, d: 1, l: 0, pts: 10 }
-      ],
-      SPL: [
-        { pos: 1, team: 'الهلال', p: 11, w: 10, d: 1, l: 0, pts: 31 },
-        { pos: 2, team: 'النصر', p: 11, w: 8, d: 2, l: 1, pts: 26 },
-        { pos: 3, team: 'الاتحاد', p: 11, w: 8, d: 1, l: 2, pts: 25 },
-        { pos: 4, team: 'الأهلي السعودي', p: 11, w: 6, d: 2, l: 3, pts: 20 }
-      ],
-      EGY: [
-        { pos: 1, team: 'الأهلي', p: 8, w: 6, d: 2, l: 0, pts: 20 },
-        { pos: 2, team: 'الزمالك', p: 8, w: 5, d: 2, l: 1, pts: 17 }
-      ]
-    };
+      return LEAGUES[0];
+    }
 
     function switchTab(tab) {
       currentTab = tab;
       document.getElementById('btnMatches').className = 'm-tab' + (tab === 'matches' ? ' active' : '');
       document.getElementById('btnStandings').className = 'm-tab' + (tab === 'standings' ? ' active' : '');
-      document.getElementById('timeFilters').style.display = tab === 'matches' ? 'flex' : 'none';
-      if (tab === 'standings' && currentLeague === 'ALL') {
-        currentLeague = 'PL';
-        renderLeagues();
-      }
-      renderAll();
-    }
-
-    function pickTimeFilter(filterKey) {
-      currentTimeFilter = filterKey;
-      var keys = ['all', 'today', 'tomorrow', 'upcoming', 'past'];
-      for (var i = 0; i < keys.length; i++) {
-        var el = document.getElementById('tf_' + keys[i]);
-        if (el) el.className = 'f-chip' + (keys[i] === filterKey ? ' active' : '');
-      }
       renderAll();
     }
 
@@ -293,15 +193,7 @@
       currentLeague = code;
       renderLeagues();
       renderAll();
-    }
-
-    function doRefresh() {
-      var st = document.getElementById('syncStatus');
-      st.innerHTML = 'جاري التحديث...';
-      setTimeout(function () {
-        st.innerHTML = 'جاهز';
-        renderAll();
-      }, 350);
+      syncCurrentLeague();
     }
 
     function renderLeagues() {
@@ -314,24 +206,213 @@
       document.getElementById('leaguesBar').innerHTML = html;
     }
 
-    function listToItems(arr, extraClass) {
-      if (!arr || !arr.length) return '<li style="color:#94a3b8">غير متوفر</li>';
-      var out = '';
-      for (var i = 0; i < arr.length; i++) {
-        out += '<li' + (extraClass ? ' class="' + extraClass + '"' : '') + '>' + arr[i] + '</li>';
+    function xhrGet(url, onSuccess, onError) {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.timeout = 8000;
+        xhr.onload = function () {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              onSuccess(JSON.parse(xhr.responseText));
+            } catch (e) {
+              if (onError) onError('تعذر قراءة استجابة المصدر');
+            }
+          } else {
+            if (onError) onError('HTTP ' + xhr.status);
+          }
+        };
+        xhr.ontimeout = function () {
+          if (onError) onError('انتهت مهلة الاتصال');
+        };
+        xhr.onerror = function () {
+          if (onError) onError('تعذر الاتصال بالمصدر');
+        };
+        xhr.send();
+      } catch (e) {
+        if (onError) onError('خطأ في طلب الشبكة');
+      }
+    }
+
+    function parseOpenLigaMatches(rows, lgObj) {
+      if (!rows || !rows.length) return [];
+      var out = [];
+      for (var i = 0; i < rows.length; i++) {
+        var m = rows[i];
+        var home = (m.team1 && (m.team1.teamName || m.team1.shortName)) || 'فريق 1';
+        var away = (m.team2 && (m.team2.teamName || m.team2.shortName)) || 'فريق 2';
+        var results = m.matchResults || [];
+        var score = 'vs';
+        if (results.length > 0) {
+          var lastR = results[results.length - 1];
+          if (lastR.pointsTeam1 !== undefined && lastR.pointsTeam2 !== undefined) {
+            score = lastR.pointsTeam1 + ' - ' + lastR.pointsTeam2;
+          }
+        }
+        var status = m.matchIsFinished ? 'انتهت' : 'مجدولة';
+        var dt = m.matchDateTime || '';
+        out.push({
+          id: 'ol_' + (m.matchID || i),
+          league: lgObj.name,
+          home: home,
+          away: away,
+          score: score,
+          status: status,
+          dateTime: dt.replace('T', ' ').slice(0, 16),
+          homeLineup: [],
+          awayLineup: [],
+          homeBench: [],
+          awayBench: [],
+          homeInjuries: [],
+          awayInjuries: []
+        });
       }
       return out;
     }
 
-    function openDetails(matchId) {
-      var m = null;
-      for (var i = 0; i < MATCHES.length; i++) {
-        if (MATCHES[i].id === matchId) {
-          m = MATCHES[i];
+    function parseOpenLigaStandings(rows) {
+      if (!rows || !rows.length) return [];
+      var out = [];
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        out.push({
+          pos: i + 1,
+          team: r.teamName || r.shortName || 'فريق',
+          p: r.matches !== undefined ? r.matches : '-',
+          w: r.won !== undefined ? r.won : '-',
+          d: r.draw !== undefined ? r.draw : '-',
+          l: r.lost !== undefined ? r.lost : '-',
+          pts: r.points !== undefined ? r.points : '-'
+        });
+      }
+      return out;
+    }
+
+    function syncCurrentLeague() {
+      var lg = getLeagueObj(currentLeague);
+      var st = document.getElementById('syncStatus');
+      var notice = document.getElementById('noticeBox');
+      st.innerHTML = 'جاري الجلب...';
+
+      if (lg.openligaShortcut) {
+        var matchesUrl = 'https://api.openligadb.de/getmatchdata/' + lg.openligaShortcut + '/' + lg.openligaSeason;
+        var tableUrl = 'https://api.openligadb.de/getbltable/' + lg.openligaShortcut + '/' + lg.openligaSeason;
+        var doneCount = 0;
+        var errList = [];
+
+        function finishStep() {
+          doneCount++;
+          if (doneCount < 2) return;
+          var hasMatches = (matchesByLeague[lg.code] && matchesByLeague[lg.code].length > 0);
+          var hasTable = (standingsByLeague[lg.code] && standingsByLeague[lg.code].length > 0);
+          if (hasMatches || hasTable) {
+            st.innerHTML = 'متصل';
+            notice.style.display = 'none';
+          } else {
+            st.innerHTML = 'غير متاح';
+            notice.style.display = 'block';
+            notice.innerHTML = 'لم يرد أي بيانات حية من المصدر لهذه البطولة حالياً (' + errList.join(' | ') + ').';
+          }
+          renderAll();
+        }
+
+        xhrGet(matchesUrl, function (data) {
+          matchesByLeague[lg.code] = parseOpenLigaMatches(data, lg);
+          finishStep();
+        }, function (err) {
+          errList.push('المباريات: ' + err);
+          finishStep();
+        });
+
+        xhrGet(tableUrl, function (data) {
+          standingsByLeague[lg.code] = parseOpenLigaStandings(data);
+          finishStep();
+        }, function (err) {
+          errList.push('الترتيب: ' + err);
+          finishStep();
+        });
+      } else {
+        st.innerHTML = 'بانتظار مصدر';
+        notice.style.display = 'block';
+        notice.innerHTML = 'بطولة "' + lg.name + '" لا تملك مزود بيانات حياً مفعّلاً ومضموناً بدون حظر أو بيانات وهمية في هذا الإطار حالياً. تم حذف البيانات الوهمية بالكامل.';
+        renderAll();
+      }
+    }
+
+    function buildPitchHtml(players, teamLabel) {
+      if (!players || !players.length) {
+        return '<div class="d-section"><div class="d-sec-title">مخطط الملعب — ' + teamLabel + '</div>' +
+          '<div style="font-size:12px;color:#94a3b8">لا تتوفر تشكيلة رسمية معلنة لهذه المباراة من المصدر حالياً.</div></div>';
+      }
+
+      var gk = players.slice(0, 1);
+      var def = players.slice(1, 5);
+      var mid = players.slice(5, 8);
+      var fwd = players.slice(8, 11);
+
+      function renderRow(list, startNum) {
+        var html = '<div class="pitch-row">';
+        for (var i = 0; i < list.length; i++) {
+          var num = startNum + i;
+          html += '<div class="player-node">' +
+            '<div class="jersey">' + num + '</div>' +
+            '<div class="p-name">' + list[i] + '</div>' +
+          '</div>';
+        }
+        html += '</div>';
+        return html;
+      }
+
+      return '<div class="pitch">' +
+        '<div class="pitch-midline"></div>' +
+        '<div class="pitch-circle"></div>' +
+        renderRow(fwd, 9) +
+        renderRow(mid, 6) +
+        renderRow(def, 2) +
+        renderRow(gk, 1) +
+      '</div>';
+    }
+
+    function renderListItems(items, cls) {
+      if (!items || !items.length) {
+        return '<li style="color:#94a3b8">غير متوفر من المصدر حالياً</li>';
+      }
+      var html = '';
+      for (var i = 0; i < items.length; i++) {
+        html += '<li' + (cls ? ' class="' + cls + '"' : '') + '>' + items[i] + '</li>';
+      }
+      return html;
+    }
+
+    function openMatchDetails(matchId) {
+      var list = matchesByLeague[currentLeague] || [];
+      var found = null;
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === matchId) {
+          found = list[i];
           break;
         }
       }
+      if (!found) return;
+      activeModalMatch = found;
+      activeTeamSide = 'home';
+      renderModalContent();
+      document.getElementById('detailsModal').style.display = 'block';
+    }
+
+    function switchModalTeam(side) {
+      activeTeamSide = side;
+      renderModalContent();
+    }
+
+    function renderModalContent() {
+      var m = activeModalMatch;
       if (!m) return;
+      var isHome = activeTeamSide === 'home';
+      var activeName = isHome ? m.home : m.away;
+      var activeLineup = isHome ? m.homeLineup : m.awayLineup;
+      var activeBench = isHome ? m.homeBench : m.awayBench;
+      var activeInj = isHome ? m.homeInjuries : m.awayInjuries;
 
       var html =
         '<div class="modal-head">' +
@@ -340,58 +421,31 @@
         '</div>' +
 
         '<div class="d-section">' +
-          '<div class="d-sec-title">معلومات المباراة</div>' +
-          '<div style="font-size:12px;line-height:1.8">' +
+          '<div class="d-sec-title">بيانات المباراة</div>' +
+          '<div style="font-size:12px;line-height:1.7">' +
             '<div><b>البطولة:</b> ' + m.league + ' — <b>الحالة:</b> ' + m.status + '</div>' +
-            '<div><b>التاريخ والوقت:</b> ' + m.date + ' • ' + m.time + '</div>' +
-            '<div><b>الملعب:</b> ' + (m.stadium || 'غير محدد') + ' • <b>الحكم:</b> ' + (m.referee || 'غير محدد') + '</div>' +
+            (m.dateTime ? '<div><b>الموعد:</b> ' + m.dateTime + '</div>' : '') +
           '</div>' +
         '</div>' +
 
+        '<div class="team-switch">' +
+          '<button type="button" class="sw-btn ' + (isHome ? 'active' : '') + '" onclick="switchModalTeam(\'home\')">ملعب: ' + m.home + '</button>' +
+          '<button type="button" class="sw-btn ' + (!isHome ? 'active' : '') + '" onclick="switchModalTeam(\'away\')">ملعب: ' + m.away + '</button>' +
+        '</div>' +
+
+        buildPitchHtml(activeLineup, activeName) +
+
         '<div class="d-section">' +
-          '<div class="d-sec-title">التشكيلة الأساسية</div>' +
-          '<div class="d-two-col">' +
-            '<div class="d-team-box">' +
-              '<div class="d-team-h">' + m.home + ' (' + (m.homeFormation || '') + ')</div>' +
-              '<ol class="d-list">' + listToItems(m.homeLineup, '') + '</ol>' +
-            '</div>' +
-            '<div class="d-team-box">' +
-              '<div class="d-team-h">' + m.away + ' (' + (m.awayFormation || '') + ')</div>' +
-              '<ol class="d-list">' + listToItems(m.awayLineup, '') + '</ol>' +
-            '</div>' +
-          '</div>' +
+          '<div class="d-sec-title">الاحتياط والدكة — ' + activeName + '</div>' +
+          '<ul class="d-list">' + renderListItems(activeBench, '') + '</ul>' +
         '</div>' +
 
         '<div class="d-section">' +
-          '<div class="d-sec-title">الاحتياط والدكة</div>' +
-          '<div class="d-two-col">' +
-            '<div class="d-team-box">' +
-              '<div class="d-team-h">دكة ' + m.home + '</div>' +
-              '<ul class="d-list">' + listToItems(m.homeBench, '') + '</ul>' +
-            '</div>' +
-            '<div class="d-team-box">' +
-              '<div class="d-team-h">دكة ' + m.away + '</div>' +
-              '<ul class="d-list">' + listToItems(m.awayBench, '') + '</ul>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-
-        '<div class="d-section">' +
-          '<div class="d-sec-title">الإصابات والغيابات</div>' +
-          '<div class="d-two-col">' +
-            '<div class="d-team-box">' +
-              '<div class="d-team-h">إصابات ' + m.home + '</div>' +
-              '<ul class="d-list">' + listToItems(m.homeInjuries, 'd-inj') + '</ul>' +
-            '</div>' +
-            '<div class="d-team-box">' +
-              '<div class="d-team-h">إصابات ' + m.away + '</div>' +
-              '<ul class="d-list">' + listToItems(m.awayInjuries, 'd-inj') + '</ul>' +
-            '</div>' +
-          '</div>' +
+          '<div class="d-sec-title">الإصابات والغيابات — ' + activeName + '</div>' +
+          '<ul class="d-list">' + renderListItems(activeInj, 'd-inj') + '</ul>' +
         '</div>';
 
       document.getElementById('detailsContent').innerHTML = html;
-      document.getElementById('detailsModal').style.display = 'block';
     }
 
     function closeDetails() {
@@ -404,59 +458,38 @@
       }
     }
 
-    function matchesFilter(m, q) {
-      if (currentLeague !== 'ALL' && m.leagueCode !== currentLeague) return false;
-      if (currentTimeFilter !== 'all' && m.kind !== currentTimeFilter) return false;
-      if (q) {
-        var hay = (m.league + ' ' + m.home + ' ' + m.away + ' ' + m.status + ' ' + m.date).toLowerCase();
-        if (hay.indexOf(q) === -1) return false;
-      }
-      return true;
-    }
-
     function renderAll() {
       var qEl = document.getElementById('q');
       var q = qEl && qEl.value ? qEl.value.trim().toLowerCase() : '';
       var view = document.getElementById('view');
-      var info = document.getElementById('infoBar');
 
       if (currentTab === 'matches') {
-        var list = [];
-        for (var i = 0; i < MATCHES.length; i++) {
-          if (matchesFilter(MATCHES[i], q)) {
-            list.push(MATCHES[i]);
+        var list = matchesByLeague[currentLeague] || [];
+        var out = '';
+        for (var i = 0; i < list.length; i++) {
+          var m = list[i];
+          var hay = (m.league + ' ' + m.home + ' ' + m.away + ' ' + m.status + ' ' + (m.dateTime || '')).toLowerCase();
+          if (!q || hay.indexOf(q) !== -1) {
+            out += '<div class="card">' +
+              '<div class="m-top"><span>' + m.league + '</span><span>' + m.status + '</span></div>' +
+              '<div class="m-grid">' +
+                '<div class="team-name">' + m.home + '</div>' +
+                '<div class="score-box">' + m.score + '</div>' +
+                '<div class="team-name">' + m.away + '</div>' +
+              '</div>' +
+              (m.dateTime ? '<div class="meta-row">' + m.dateTime + '</div>' : '') +
+              '<div class="m-actions">' +
+                '<button type="button" class="details-btn" onclick="openMatchDetails(\'' + m.id + '\')">تفاصيل المباراة</button>' +
+              '</div>' +
+            '</div>';
           }
         }
-
-        if (q) {
-          info.innerHTML = 'نتائج البحث عن "' + qEl.value + '" (' + list.length + ' مباراة) — اضغط تفاصيل المباراة لعرض التشكيلة والدكة والإصابات.';
-        } else {
-          info.innerHTML = 'اليوم: ' + TODAY_STR + ' | الغد: ' + TOMORROW_STR + ' — اضغط على "تفاصيل المباراة" في أي بطاقة لعرض التشكيلة والدكة والإصابات.';
-        }
-
-        var out = '';
-        for (var j = 0; j < list.length; j++) {
-          var m = list[j];
-          out += '<div class="card">' +
-            '<div class="m-top"><span>' + m.league + '</span><span>' + m.status + '</span></div>' +
-            '<div class="m-grid">' +
-              '<div class="team-name">' + m.home + '</div>' +
-              '<div class="score-box">' + m.score + '</div>' +
-              '<div class="team-name">' + m.away + '</div>' +
-            '</div>' +
-            '<div class="meta-row">التاريخ: ' + m.date + ' • الساعة: ' + m.time + '</div>' +
-            '<div class="m-actions">' +
-              '<button type="button" class="details-btn" onclick="openDetails(\'' + m.id + '\')">تفاصيل المباراة</button>' +
-            '</div>' +
-          '</div>';
-        }
-        view.innerHTML = out || '<p style="text-align:center;color:#94a3b8">لا توجد مباريات مطابقة</p>';
+        view.innerHTML = out || '<p style="text-align:center;color:#94a3b8">لا توجد مباريات متاحة حالياً لهذه البطولة</p>';
       } else {
-        var rows = STANDINGS[currentLeague] || [];
-        info.innerHTML = 'جدول ترتيب الفرق للبطولة المحددة.';
+        var rows = standingsByLeague[currentLeague] || [];
         var trs = '';
-        for (var k = 0; k < rows.length; k++) {
-          var s = rows[k];
+        for (var j = 0; j < rows.length; j++) {
+          var s = rows[j];
           var tHay = (String(s.team) + ' ' + String(s.pos)).toLowerCase();
           if (!q || tHay.indexOf(q) !== -1) {
             trs += '<tr>' +
@@ -469,12 +502,13 @@
         }
         view.innerHTML = '<div class="card" style="padding:6px"><table>' +
           '<thead><tr><th>#</th><th style="text-align:right">الفريق</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>نقاط</th></tr></thead>' +
-          '<tbody>' + (trs || '<tr><td colspan="7" style="color:#94a3b8">لا توجد فرق مطابقة</td></tr>') + '</tbody></table></div>';
+          '<tbody>' + (trs || '<tr><td colspan="7" style="color:#94a3b8">لا يوجد جدول ترتيب متاح حالياً</td></tr>') + '</tbody></table></div>';
       }
     }
 
     renderLeagues();
     renderAll();
+    syncCurrentLeague();
   </script>
 </body>
 </html>
