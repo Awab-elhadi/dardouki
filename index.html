@@ -19,7 +19,7 @@
       --gold-soft: rgba(181, 134, 50, 0.14);
       --border: #dfd6c3;
       --highlight: rgba(181, 134, 50, 0.24);
-      --mark-bg: rgba(181, 134, 50, 0.3);
+      --mark-bg: rgba(181, 134, 50, 0.32);
       --ornament: rgba(181, 134, 50, 0.38);
     }
 
@@ -37,7 +37,7 @@
       --gold-soft: rgba(181, 134, 50, 0.14);
       --border: #dfd6c3;
       --highlight: rgba(181, 134, 50, 0.24);
-      --mark-bg: rgba(181, 134, 50, 0.3);
+      --mark-bg: rgba(181, 134, 50, 0.32);
       --ornament: rgba(181, 134, 50, 0.38);
     }
 
@@ -55,7 +55,7 @@
       --gold-soft: rgba(212, 166, 74, 0.16);
       --border: #272d2a;
       --highlight: rgba(212, 166, 74, 0.22);
-      --mark-bg: rgba(212, 166, 74, 0.3);
+      --mark-bg: rgba(212, 166, 74, 0.32);
       --ornament: rgba(212, 166, 74, 0.32);
     }
 
@@ -73,7 +73,7 @@
         --gold-soft: rgba(212, 166, 74, 0.16);
         --border: #272d2a;
         --highlight: rgba(212, 166, 74, 0.22);
-        --mark-bg: rgba(212, 166, 74, 0.3);
+        --mark-bg: rgba(212, 166, 74, 0.32);
         --ornament: rgba(212, 166, 74, 0.32);
       }
     }
@@ -88,18 +88,18 @@
       font-family: "Traditional Arabic", "Scheherazade New", "Amiri", "Noto Naskh Arabic", Tahoma, Arial, sans-serif;
       background-color: var(--bg-page);
       color: var(--text-main);
-      line-height: 1.65;
+      line-height: 1.6;
       min-height: 100vh;
     }
 
     .topbar {
       background-color: var(--bg-header);
       color: #ffffff;
-      padding: 0.5rem 0.8rem;
+      padding: 0.45rem 0.75rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.45rem;
+      gap: 0.4rem;
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
@@ -115,13 +115,13 @@
 
     .btn {
       font-family: inherit;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       font-weight: 700;
       border: 1px solid rgba(255, 255, 255, 0.22);
       background-color: rgba(255, 255, 255, 0.12);
       color: #ffffff;
       border-radius: 7px;
-      padding: 0.28rem 0.58rem;
+      padding: 0.25rem 0.55rem;
       cursor: pointer;
       white-space: nowrap;
     }
@@ -141,7 +141,6 @@
       border-color: transparent;
     }
 
-    /* القائمة الجانبية للسور */
     .drawer-backdrop {
       display: none;
       position: fixed;
@@ -239,20 +238,18 @@
       color: var(--text-muted);
     }
 
-    /* الحاوية الرئيسية */
     .mushaf-wrap {
       max-width: 920px;
-      margin: 0.65rem auto 1.6rem;
-      padding: 0 0.6rem;
+      margin: 0.6rem auto 1.5rem;
+      padding: 0 0.55rem;
     }
 
-    /* شريط البحث */
     .ayah-search-box {
       background-color: var(--bg-paper);
       border: 1px solid var(--border);
       border-radius: 9px;
-      padding: 0.45rem 0.65rem;
-      margin-bottom: 0.65rem;
+      padding: 0.42rem 0.6rem;
+      margin-bottom: 0.6rem;
     }
 
     .ayah-search-row {
@@ -266,8 +263,8 @@
       flex: 1;
       min-width: 165px;
       font-family: inherit;
-      font-size: 0.98rem;
-      padding: 0.3rem 0.55rem;
+      font-size: 0.96rem;
+      padding: 0.28rem 0.55rem;
       border-radius: 7px;
       border: 1px solid var(--border);
       background-color: var(--bg-page);
@@ -277,9 +274,9 @@
 
     .scope-btn {
       font-family: inherit;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 700;
-      padding: 0.28rem 0.55rem;
+      padding: 0.26rem 0.52rem;
       border-radius: 7px;
       border: 1px solid var(--border);
       background-color: var(--accent-soft);
@@ -289,10 +286,10 @@
 
     .search-results-panel {
       display: none;
-      margin-top: 0.5rem;
-      padding-top: 0.45rem;
+      margin-top: 0.45rem;
+      padding-top: 0.4rem;
       border-top: 1px solid var(--border);
-      max-height: 240px;
+      max-height: 230px;
       overflow-y: auto;
     }
 
@@ -304,28 +301,29 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.9rem;
+      gap: 0.4rem;
+      font-size: 0.88rem;
       color: var(--text-muted);
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.3rem;
     }
 
     .clear-search-btn {
       font-family: inherit;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       background: transparent;
       border: 1px solid var(--border);
       color: var(--text-main);
       border-radius: 6px;
-      padding: 0.1rem 0.45rem;
+      padding: 0.08rem 0.42rem;
       cursor: pointer;
     }
 
     .result-ayah-card {
-      padding: 0.45rem 0.6rem;
+      padding: 0.4rem 0.55rem;
       border-radius: 7px;
       border: 1px solid var(--border);
       background-color: var(--bg-page);
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.3rem;
       cursor: pointer;
     }
 
@@ -335,37 +333,35 @@
     }
 
     .result-ayah-meta {
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: var(--accent);
-      margin-bottom: 0.1rem;
+      margin-bottom: 0.08rem;
     }
 
     .result-ayah-text {
-      font-size: 1.35rem;
-      line-height: 1.75;
+      font-size: 1.15rem;
+      line-height: 1.65;
     }
 
     mark.hit {
       background-color: var(--mark-bg);
       color: inherit;
-      padding: 0 0.12rem;
+      padding: 0 0.1rem;
       border-radius: 3px;
     }
 
-    /* الإطار الزخرفي الخارجي لصفحة المصحف */
     .mushaf-frame {
       background-color: var(--bg-paper);
       border: 2px solid var(--gold);
       border-radius: 12px;
-      padding: 0.38rem;
-      position: relative;
+      padding: 0.32rem;
     }
 
     .mushaf-inner-frame {
       border: 1px solid var(--ornament);
       border-radius: 9px;
-      padding: 0.8rem 0.9rem 1rem;
+      padding: 0.7rem 0.8rem 0.9rem;
       background-image:
         radial-gradient(circle at top right, var(--gold-soft) 0, transparent 22%),
         radial-gradient(circle at top left, var(--gold-soft) 0, transparent 22%),
@@ -373,16 +369,15 @@
         radial-gradient(circle at bottom left, var(--gold-soft) 0, transparent 22%);
     }
 
-    /* شريط زخرفي علوي للصفحة */
     .page-header-ornament {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 0.5rem;
-      padding-bottom: 0.45rem;
-      margin-bottom: 0.6rem;
+      padding-bottom: 0.38rem;
+      margin-bottom: 0.5rem;
       border-bottom: 1px solid var(--ornament);
-      font-size: 0.98rem;
+      font-size: 0.92rem;
       color: var(--text-muted);
     }
 
@@ -390,44 +385,44 @@
       text-align: center;
       border: 1px solid var(--gold);
       background-color: var(--gold-soft);
-      border-radius: 10px;
-      padding: 0.32rem 0.75rem;
-      margin-bottom: 0.55rem;
-      position: relative;
+      border-radius: 9px;
+      padding: 0.25rem 0.65rem;
+      margin-bottom: 0.45rem;
     }
 
     .surah-cartouche::before,
     .surah-cartouche::after {
       content: "❖";
       color: var(--gold);
-      font-size: 0.95rem;
-      margin: 0 0.45rem;
+      font-size: 0.88rem;
+      margin: 0 0.4rem;
       vertical-align: middle;
     }
 
     .surah-title {
       display: inline;
-      font-size: 1.6rem;
+      font-size: 1.38rem;
       font-weight: 700;
       color: var(--accent);
     }
 
     .basmala-ornament {
       text-align: center;
-      font-size: 1.65rem;
+      font-size: 1.4rem;
       font-weight: 700;
       color: var(--text-main);
-      padding: 0.25rem 0.4rem 0.45rem;
-      margin-bottom: 0.45rem;
+      padding: 0.2rem 0.35rem 0.35rem;
+      margin-bottom: 0.4rem;
       border-bottom: 1px dashed var(--ornament);
     }
 
-    /* نص الصفحة بمسافات متقاربة ومضبوطة */
+    /* خط متناسق ومسافات طبيعية بدون فجوات */
     .mushaf-page-text {
-      font-size: 1.92rem;
-      line-height: 2.08;
-      text-align: justify;
-      word-spacing: -0.02em;
+      font-size: 1.42rem;
+      line-height: 1.72;
+      text-align: right;
+      word-spacing: normal;
+      letter-spacing: normal;
       color: var(--text-main);
     }
 
@@ -447,16 +442,15 @@
       box-shadow: inset 0 -2px 0 var(--gold);
     }
 
-    /* زخرفة رقم الآية بنمط المصحف */
     .ayah-rosace {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 1.45rem;
-      height: 1.45rem;
-      padding: 0 0.2rem;
-      margin: 0 0.14rem;
-      font-size: 0.82rem;
+      min-width: 1.25rem;
+      height: 1.25rem;
+      padding: 0 0.16rem;
+      margin: 0 0.12rem;
+      font-size: 0.76rem;
       font-weight: 700;
       color: var(--accent);
       background-color: var(--gold-soft);
@@ -466,13 +460,12 @@
       line-height: 1;
     }
 
-    /* شريط التفسير المدمج أسفل الصفحة */
     .tafsir-bar {
-      margin-top: 0.75rem;
-      padding-top: 0.55rem;
+      margin-top: 0.65rem;
+      padding-top: 0.5rem;
       border-top: 1px solid var(--ornament);
-      font-size: 0.98rem;
-      line-height: 1.55;
+      font-size: 0.94rem;
+      line-height: 1.5;
       color: var(--text-muted);
     }
 
@@ -480,10 +473,9 @@
       color: var(--accent);
     }
 
-    /* تنقل الصفحات والسور */
     .page-nav-bar {
-      margin-top: 0.7rem;
-      padding-top: 0.55rem;
+      margin-top: 0.6rem;
+      padding-top: 0.5rem;
       border-top: 1px solid var(--ornament);
       display: flex;
       align-items: center;
@@ -493,10 +485,10 @@
     }
 
     .page-indicator {
-      font-size: 1rem;
+      font-size: 0.92rem;
       font-weight: 700;
       color: var(--accent);
-      padding: 0.18rem 0.65rem;
+      padding: 0.14rem 0.6rem;
       border-radius: 20px;
       border: 1px solid var(--ornament);
       background-color: var(--gold-soft);
@@ -506,11 +498,11 @@
       background-color: var(--accent);
       color: #ffffff;
       border: none;
-      padding: 0.34rem 0.75rem;
+      padding: 0.3rem 0.7rem;
     }
 
     .surah-step-bar {
-      margin-top: 0.55rem;
+      margin-top: 0.5rem;
       display: flex;
       justify-content: space-between;
       gap: 0.5rem;
@@ -520,8 +512,8 @@
       background-color: transparent;
       color: var(--text-muted);
       border: 1px solid var(--border);
-      padding: 0.26rem 0.65rem;
-      font-size: 0.88rem;
+      padding: 0.24rem 0.6rem;
+      font-size: 0.85rem;
     }
   </style>
 </head>
@@ -554,7 +546,7 @@
   <main class="mushaf-wrap">
     <section class="ayah-search-box" aria-label="البحث في الآيات">
       <div class="ayah-search-row">
-        <input id="ayahSearchInput" type="search" placeholder="ابحث في الآيات واظهر النتائج..." />
+        <input id="ayahSearchInput" type="search" placeholder="ابحث في الآيات (مثال: العالمين، الصراط، أحد)..." />
         <button id="scopeBtn" class="scope-btn" type="button">النطاق: السورة الحالية</button>
       </div>
       <div id="searchResultsPanel" class="search-results-panel">
@@ -754,15 +746,16 @@
     };
 
     const API_BASE = "https://api.alquran.cloud/v1";
-    const POS_KEY = "quran_pages_ornate_pos_v1";
-    const THEME_KEY = "quran_pages_ornate_theme_v1";
+    const POS_KEY = "quran_pages_ornate_pos_v3";
+    const THEME_KEY = "quran_pages_ornate_theme_v3";
     const THEME_MODES = ["auto", "light", "dark"];
     const THEME_LABELS = {
       auto: "الوضع: نظام الجهاز",
       light: "الوضع: أبيض",
       dark: "الوضع: أسود"
     };
-    const AYAHS_PER_PAGE = 14;
+    const AYAHS_PER_PAGE = 22;
+    const DEFAULT_FONT_REM = 1.42;
 
     const sideDrawer = document.getElementById("sideDrawer");
     const drawerBackdrop = document.getElementById("drawerBackdrop");
@@ -797,9 +790,9 @@
     let currentSurah = 1;
     let currentAyahs = [];
     let currentTafsir = [];
+    let isOnlineSurahLoaded = false;
     let currentPage = 1;
-    let selectedAyah = 1;
-    let fontRem = 1.92;
+    let fontRem = DEFAULT_FONT_REM;
     let themeIndex = 0;
     let searchAllQuran = false;
     let searchTimer = null;
@@ -811,11 +804,12 @@
     function normalizeArabic(str) {
       return String(str || "")
         .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
-        .replace(/[إأآا]/g, "ا")
-        .replace(/ى/g, "ي")
+        .replace(/[ٱإأآا]/g, "ا")
+        .replace(/[ىيئ]/g, "ي")
         .replace(/ة/g, "ه")
         .replace(/ؤ/g, "و")
-        .replace(/ئ/g, "ي");
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
     function escapeRegExp(str) {
@@ -971,7 +965,6 @@
 
     function selectAyah(ayahNum) {
       const target = Number(ayahNum);
-      selectedAyah = target;
 
       quranPageText.querySelectorAll(".ayah-span").forEach((el) => {
         el.classList.toggle("active", Number(el.dataset.ayah) === target);
@@ -983,18 +976,18 @@
       savePos(currentSurah, target, currentPage);
     }
 
-    function renderSearchMatches(matches, query) {
+    function renderSearchMatches(matches, query, note = "") {
       searchResultsPanel.classList.add("open");
       searchResultsList.innerHTML = "";
 
       if (!matches.length) {
-        searchStatusText.textContent = "لا توجد آيات مطابقة لهذا البحث.";
+        searchStatusText.textContent = note || "لا توجد آيات مطابقة لهذا البحث.";
         return;
       }
 
-      searchStatusText.textContent = `الآيات المطابقة (${toAr(matches.length)}):`;
+      searchStatusText.textContent = note || `الآيات المطابقة (${toAr(matches.length)}):`;
 
-      matches.slice(0, 50).forEach((item) => {
+      matches.slice(0, 60).forEach((item) => {
         const card = document.createElement("div");
         card.className = "result-ayah-card";
 
@@ -1035,7 +1028,11 @@
       const surahInfo = SURAHS_114.find(([n]) => n === currentSurah) || SURAHS_114[0];
 
       const localMatches = currentAyahs
-        .filter((a) => a.text.includes(q) || normalizeArabic(a.text).includes(normQ))
+        .filter((a) => {
+          if (a.text.includes(q)) return true;
+          const normAyah = normalizeArabic(a.text);
+          return normQ && normAyah.includes(normQ);
+        })
         .map((a) => ({
           surahNumber: currentSurah,
           surahName: surahInfo[1],
@@ -1043,7 +1040,12 @@
           text: a.text
         }));
 
-      renderSearchMatches(localMatches, q);
+      const offlineNotice =
+        !isOnlineSurahLoaded && !localMatches.length && currentSurah !== 1 && currentSurah < 112
+          ? "النص الكامل للسورة غير محمّل بدون إنترنت؛ فعّل الإنترنت أو غيّر النطاق إلى كل المصحف."
+          : "";
+
+      renderSearchMatches(localMatches, q, offlineNotice);
 
       if (searchAllQuran) {
         searchStatusText.textContent = "جاري البحث في جميع سور القرآن...";
@@ -1066,7 +1068,7 @@
             renderSearchMatches(apiMatches, q);
           }
         } catch (e) {
-          renderSearchMatches(localMatches, q);
+          renderSearchMatches(localMatches, q, "تعذر البحث في كامل المصحف؛ تحقق من الاتصال بالإنترنت.");
         }
       }
     }
@@ -1082,6 +1084,7 @@
 
       renderSurahList(surahFilterInput.value);
       currentTafsir = [];
+      isOnlineSurahLoaded = false;
       currentAyahs = buildFallback(num, count);
       currentPage = targetPage || Math.max(1, Math.ceil(targetAyah / AYAHS_PER_PAGE));
       renderCurrentPage(targetAyah);
@@ -1097,10 +1100,12 @@
 
         const [tJson, fJson] = await Promise.all([tRes.json(), fRes.json()]);
         if (tJson.code === 200 && tJson.data && Array.isArray(tJson.data.ayahs)) {
+          isOnlineSurahLoaded = true;
           currentAyahs = tJson.data.ayahs;
           currentTafsir = (fJson.code === 200 && fJson.data && fJson.data.ayahs) || [];
           currentPage = targetPage || Math.max(1, Math.ceil(targetAyah / AYAHS_PER_PAGE));
           renderCurrentPage(targetAyah);
+          if (ayahSearchInput.value.trim()) runAyahSearch();
         }
       } catch (e) {}
     }
@@ -1112,7 +1117,7 @@
 
     ayahSearchInput.addEventListener("input", () => {
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(runAyahSearch, 220);
+      searchTimer = setTimeout(runAyahSearch, 200);
     });
 
     scopeBtn.addEventListener("click", () => {
@@ -1131,9 +1136,9 @@
     });
 
     fontBtn.addEventListener("click", () => {
-      fontRem = fontRem >= 2.65 ? 1.72 : Number((fontRem + 0.22).toFixed(2));
+      fontRem = fontRem >= 2.08 ? 1.24 : Number((fontRem + 0.18).toFixed(2));
       quranPageText.style.fontSize = `${fontRem}rem`;
-      fontBtn.textContent = fontRem >= 2.65 ? "تصغير الخط" : "تكبير الخط";
+      fontBtn.textContent = fontRem >= 2.08 ? "تصغير الخط" : "تكبير الخط";
     });
 
     resumeBtn.addEventListener("click", () => {
