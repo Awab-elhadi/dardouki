@@ -56,7 +56,7 @@
   <div class="wrap">
     <div class="bar">
       <div class="title-lbl" id="liveTitle">المباريات الحية</div>
-      <button type="button" class="btn" onclick="loadLiveMatches()">تحديث الآن</button>
+      <button type="button" class="btn" onclick="loadPaidLiveMatches()">تحديث الآن</button>
     </div>
 
     <div class="leagues" id="leaguesBar"></div>
@@ -64,7 +64,7 @@
 
     <div class="box">
       <div class="box-h">
-        <span id="currentLeagueName">الدوري الألماني</span>
+        <span id="currentLeagueName">الدوري الإسباني</span>
         <span id="todayIso" style="font-size:11px;color:#64748b"></span>
       </div>
       <div id="matchesList"></div>
@@ -72,62 +72,24 @@
   </div>
 
   <script>
-    // ضع هنا رابط API حي يرجع مباريات حية بصيغة JSON إن توفر لديك
-    var LIVE_API_URL = '';
-    var TSDB_BASE = 'https://www.thesportsdb.com/api/v1/json/123';
+    // ضع هنا رابط نقطة النهاية (Endpoint) الخاصة بمصدرك المدفوع
+    var PAID_API_URL = '';
+    // اختياري: اسم وقيمة هيدر المفتاح إذا لم يكن الرابط وسيطاً يضيف المفتاح تلقائياً
+    var PAID_API_HEADER_NAME = '';
+    var PAID_API_HEADER_VALUE = '';
+
     var AUTO_SYNC_MS = 90000;
-    var currentLeague = 'bl1';
+    var currentLeague = 'pd';
     var matchesByLeague = {};
 
-    var TEAM_AR = {
-      'fc bayern münchen': 'بايرن ميونخ',
-      'bayern münchen': 'بايرن ميونخ',
-      'borussia dortmund': 'بوروسيا دورتموند',
-      'rb leipzig': 'لايبزيغ',
-      'bayer 04 leverkusen': 'باير ليفركوزن',
-      'bayer leverkusen': 'باير ليفركوزن',
-      'vfb stuttgart': 'شتوتغارت',
-      'eintracht frankfurt': 'آينتراخت فرانكفورت',
-      'sc freiburg': 'فرايبورغ',
-      'tsg hoffenheim': 'هوفنهايم',
-      'vfl wolfsburg': 'فولفسبورغ',
-      'sv werder bremen': 'فيردر بريمن',
-      '1. fc union berlin': 'يونيون برلين',
-      '1. fsv mainz 05': 'ماينز',
-      'fc augsburg': 'أوغسبورغ',
-      'borussia mönchengladbach': 'بوروسيا مونشنغلادباخ',
-      '1. fc heidenheim': 'هايدنهايم',
-      'vfl bochum': 'بوخوم',
-      'fc st. pauli': 'سانت باولي',
-      'holstein kiel': 'هولشتاين كيل',
-      'real madrid': 'ريال مدريد',
-      'fc barcelona': 'برشلونة',
-      'atletico madrid': 'أتلتيكو مدريد',
-      'arsenal': 'أرسنال',
-      'liverpool': 'ليفربول',
-      'manchester city': 'مانشستر سيتي',
-      'chelsea': 'تشيلسي',
-      'manchester united': 'مانشستر يونايتد',
-      'tottenham hotspur': 'توتنهام',
-      'inter': 'إنتر ميلان',
-      'ac milan': 'ميلان',
-      'napoli': 'نابولي',
-      'juventus': 'يوفنتوس',
-      'al-hilal': 'الهلال',
-      'al-nassr': 'النصر',
-      'al-ittihad': 'الاتحاد',
-      'al-ahli': 'الأهلي السعودي',
-      'zamalek': 'الزمالك'
-    };
-
     var LEAGUES = [
-      { code: 'bl1', name: 'الدوري الألماني', openliga: 'bl1', season: '2026', tsdbId: '4331' },
-      { code: 'pl', name: 'الدوري الإنجليزي', openliga: '', season: '', tsdbId: '4328' },
-      { code: 'pd', name: 'الدوري الإسباني', openliga: '', season: '', tsdbId: '4335' },
-      { code: 'cl', name: 'دوري أبطال أوروبا', openliga: '', season: '', tsdbId: '4480' },
-      { code: 'sa', name: 'الدوري الإيطالي', openliga: '', season: '', tsdbId: '4332' },
-      { code: 'spl', name: 'الدوري السعودي', openliga: '', season: '', tsdbId: '4668' },
-      { code: 'egy', name: 'الدوري المصري', openliga: '', season: '', tsdbId: '4498' }
+      { code: 'pd', name: 'الدوري الإسباني' },
+      { code: 'pl', name: 'الدوري الإنجليزي' },
+      { code: 'bl1', name: 'الدوري الألماني' },
+      { code: 'sa', name: 'الدوري الإيطالي' },
+      { code: 'cl', name: 'دوري أبطال أوروبا' },
+      { code: 'spl', name: 'الدوري السعودي' },
+      { code: 'egy', name: 'الدوري المصري' }
     ];
 
     function getTodayIso() {
@@ -138,18 +100,6 @@
       return y + '-' + m + '-' + day;
     }
 
-    function translateTeam(raw) {
-      if (!raw) return 'فريق';
-      var clean = String(raw).trim();
-      var low = clean.toLowerCase();
-      if (TEAM_AR[low]) return TEAM_AR[low];
-      var keys = Object.keys(TEAM_AR);
-      for (var i = 0; i < keys.length; i++) {
-        if (low.indexOf(keys[i]) !== -1) return TEAM_AR[keys[i]];
-      }
-      return clean;
-    }
-
     function getLeague(code) {
       for (var i = 0; i < LEAGUES.length; i++) {
         if (LEAGUES[i].code === code) return LEAGUES[i];
@@ -157,14 +107,9 @@
       return LEAGUES[0];
     }
 
-    function isSoccerEvent(ev) {
-      var sport = (ev && ev.strSport) ? String(ev.strSport).toLowerCase() : 'soccer';
-      return sport === 'soccer' || sport === 'football';
-    }
-
-    function buildWatchUrl(home, away, rawVideo) {
-      if (rawVideo) {
-        var u = String(rawVideo).trim();
+    function buildWatchUrl(home, away, rawUrl) {
+      if (rawUrl) {
+        var u = String(rawUrl).trim();
         if (u.indexOf('http://') === 0 || u.indexOf('https://') === 0) return u;
         return 'https://' + u;
       }
@@ -185,154 +130,98 @@
       currentLeague = code;
       renderLeagues();
       renderList();
-      loadLiveMatches();
+      loadPaidLiveMatches();
     }
 
-    function fetchJson(url, ok, fail) {
-      var targets = [
-        url,
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-        'https://corsproxy.io/?' + encodeURIComponent(url)
-      ];
-      var idx = 0;
+    function normalizePaidMatches(data, leagueCode) {
+      var rawArr = Array.isArray(data)
+        ? data
+        : (data && Array.isArray(data.matches) ? data.matches : (data && Array.isArray(data.response) ? data.response : []));
 
-      function next() {
-        if (idx >= targets.length) {
-          if (fail) fail('تعذر الاتصال بالمصدر');
-          return;
-        }
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', targets[idx++], true);
-        xhr.timeout = 8000;
-        xhr.onload = function () {
-          if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
-            try {
-              var raw = JSON.parse(xhr.responseText);
-              var data = (raw && typeof raw.contents === 'string') ? JSON.parse(raw.contents) : raw;
-              ok(data);
-            } catch (e) { next(); }
-          } else { next(); }
-        };
-        xhr.ontimeout = next;
-        xhr.onerror = next;
-        xhr.send();
+      var list = [];
+      for (var i = 0; i < rawArr.length; i++) {
+        var item = rawArr[i];
+        var itemLeague = String(item.leagueCode || item.league || '').toLowerCase();
+        if (leagueCode && itemLeague && itemLeague !== leagueCode.toLowerCase()) continue;
+
+        var home = item.home || (item.teams && item.teams.home && item.teams.home.name) || 'فريق 1';
+        var away = item.away || (item.teams && item.teams.away && item.teams.away.name) || 'فريق 2';
+        var score = item.score || (
+          (item.goals && item.goals.home !== undefined && item.goals.away !== undefined)
+            ? (item.goals.home + ' - ' + item.goals.away)
+            : 'vs'
+        );
+        var status = item.status || (item.fixture && item.fixture.status && item.fixture.status.short) || 'مباشر';
+        var isLive = Boolean(item.isLive || status === 'مباشر' || status === 'LIVE' || status === '1H' || status === '2H' || status === 'HT');
+        var watch = buildWatchUrl(home, away, item.watchUrl || item.streamUrl || item.url || '');
+
+        list.push({
+          home: String(home),
+          away: String(away),
+          score: String(score),
+          status: String(status),
+          isLive: isLive,
+          watchUrl: watch
+        });
       }
-      next();
+      return list;
     }
 
-    function loadLiveMatches() {
+    function loadPaidLiveMatches() {
       var lg = getLeague(currentLeague);
-      var today = getTodayIso();
       var badge = document.getElementById('syncBadge');
       var msg = document.getElementById('msgBox');
-      badge.innerHTML = 'جاري التحديث...';
 
-      if (LIVE_API_URL) {
-        fetchJson(LIVE_API_URL, function (data) {
-          var arr = Array.isArray(data) ? data : (data && Array.isArray(data.matches) ? data.matches : []);
-          var list = [];
-          for (var i = 0; i < arr.length; i++) {
-            var item = arr[i];
-            var homeName = translateTeam(item.home || item.homeTeam || '');
-            var awayName = translateTeam(item.away || item.awayTeam || '');
-            list.push({
-              home: homeName,
-              away: awayName,
-              date: item.date || today,
-              score: item.score || 'vs',
-              status: item.status || 'مباشر',
-              isLive: Boolean(item.isLive || item.status === 'مباشر' || item.status === 'LIVE'),
-              watchUrl: buildWatchUrl(homeName, awayName, item.watchUrl || item.video || '')
-            });
-          }
-          matchesByLeague[lg.code] = list;
-          badge.innerHTML = 'مباشر • كل 90 ث';
-          msg.style.display = 'none';
-          renderList();
-        }, function (err) {
-          badge.innerHTML = 'غير متاح';
-          msg.style.display = 'block';
-          msg.innerHTML = 'تعذر الاتصال بمصدر المباريات الحية (' + err + ').';
-          renderList();
-        });
+      if (!PAID_API_URL) {
+        badge.innerHTML = 'بانتظار الربط • 90 ث';
+        msg.style.display = 'block';
+        msg.innerHTML = 'أدخل رابط المصدر المدفوع في المتغير <b>PAID_API_URL</b> داخل الكود ليتم جلب المباريات الحية وتحديثها تلقائياً كل 90 ثانية.';
+        renderList();
         return;
       }
 
-      if (lg.openliga) {
-        var url = 'https://api.openligadb.de/getmatchdata/' + lg.openliga + '/' + lg.season;
-        fetchJson(url, function (rows) {
-          var list = [];
-          for (var i = 0; i < (rows || []).length; i++) {
-            var m = rows[i];
-            var dt = m.matchDateTime || '';
-            var dPart = dt.slice(0, 10);
-            var tPart = dt.slice(11, 16);
-            var res = m.matchResults || [];
-            var hasRes = res.length > 0;
-            var isLive = !m.matchIsFinished && hasRes;
-            if (!isLive && dPart !== today) continue;
-            var score = hasRes ? (res[res.length - 1].pointsTeam1 + ' - ' + res[res.length - 1].pointsTeam2) : (tPart || 'vs');
-            var homeName = translateTeam(m.team1 && (m.team1.teamName || m.team1.shortName));
-            var awayName = translateTeam(m.team2 && (m.team2.teamName || m.team2.shortName));
-            list.push({
-              home: homeName,
-              away: awayName,
-              date: dPart,
-              score: score,
-              status: isLive ? 'مباشر' : (m.matchIsFinished ? 'انتهت' : (tPart || 'مجدولة')),
-              isLive: isLive,
-              watchUrl: buildWatchUrl(homeName, awayName, '')
-            });
-          }
-          matchesByLeague[lg.code] = list;
-          badge.innerHTML = 'مباشر • كل 90 ث';
-          msg.style.display = 'none';
-          renderList();
-        }, function (err) {
-          badge.innerHTML = 'غير متاح';
-          msg.style.display = 'block';
-          msg.innerHTML = 'تعذر جلب المباريات الحية لبطولة "' + lg.name + '" (' + err + ').';
-          renderList();
-        });
-      } else {
-        var tsUrl = TSDB_BASE + '/eventsday.php?d=' + today + '&s=Soccer';
-        fetchJson(tsUrl, function (d) {
-          var arr = (d && Array.isArray(d.events)) ? d.events : [];
-          var list = [];
-          for (var i = 0; i < arr.length; i++) {
-            var ev = arr[i];
-            if (!isSoccerEvent(ev)) continue;
-            if (ev.idLeague && String(ev.idLeague) !== String(lg.tsdbId)) continue;
-            var hs = ev.intHomeScore;
-            var as = ev.intAwayScore;
-            var hasScore = hs !== null && as !== null && hs !== undefined && as !== undefined && String(hs) !== '' && String(as) !== '';
-            var tPart = ev.strTime ? String(ev.strTime).slice(0, 5) : 'مباشر';
-            var homeName = translateTeam(ev.strHomeTeam);
-            var awayName = translateTeam(ev.strAwayTeam);
-            list.push({
-              home: homeName,
-              away: awayName,
-              date: ev.dateEvent || today,
-              score: hasScore ? (hs + ' - ' + as) : tPart,
-              status: hasScore ? 'انتهت' : tPart,
-              isLive: false,
-              watchUrl: buildWatchUrl(homeName, awayName, ev.strVideo || '')
-            });
-          }
-          matchesByLeague[lg.code] = list;
-          badge.innerHTML = list.length ? 'مباشر • كل 90 ث' : 'غير متاح';
-          msg.style.display = list.length ? 'none' : 'block';
-          if (!list.length) {
-            msg.innerHTML = 'لا توجد مباريات حية متاحة لبطولة "' + lg.name + '" من المصدر المجاني حالياً.';
-          }
-          renderList();
-        }, function (err) {
-          badge.innerHTML = 'غير متاح';
-          msg.style.display = 'block';
-          msg.innerHTML = 'تعذر جلب المباريات الحية لبطولة "' + lg.name + '" (' + err + ').';
-          renderList();
-        });
+      badge.innerHTML = 'جاري التحديث...';
+      var sep = PAID_API_URL.indexOf('?') === -1 ? '?' : '&';
+      var reqUrl = PAID_API_URL + sep + 'league=' + encodeURIComponent(lg.code) + '&date=' + encodeURIComponent(getTodayIso());
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', reqUrl, true);
+      xhr.timeout = 9000;
+      if (PAID_API_HEADER_NAME && PAID_API_HEADER_VALUE) {
+        xhr.setRequestHeader(PAID_API_HEADER_NAME, PAID_API_HEADER_VALUE);
       }
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+          try {
+            var parsed = JSON.parse(xhr.responseText);
+            matchesByLeague[lg.code] = normalizePaidMatches(parsed, lg.code);
+            badge.innerHTML = 'مباشر • كل 90 ث';
+            msg.style.display = 'none';
+          } catch (e) {
+            badge.innerHTML = 'خطأ بيانات';
+            msg.style.display = 'block';
+            msg.innerHTML = 'تعذر قراءة بيانات المصدر المدفوع بصيغة JSON.';
+          }
+        } else {
+          badge.innerHTML = 'غير متاح';
+          msg.style.display = 'block';
+          msg.innerHTML = 'تعذر الوصول للمصدر المدفوع (رمز الحالة ' + xhr.status + ').';
+        }
+        renderList();
+      };
+      xhr.ontimeout = function () {
+        badge.innerHTML = 'انتهت المهلة';
+        msg.style.display = 'block';
+        msg.innerHTML = 'تأخر رد المصدر المدفوع، سيتم إعادة المحاولة تلقائياً كل 90 ثانية.';
+        renderList();
+      };
+      xhr.onerror = function () {
+        badge.innerHTML = 'خطأ اتصال';
+        msg.style.display = 'block';
+        msg.innerHTML = 'تعذر الاتصال بالمصدر المدفوع من الجهاز الحالي.';
+        renderList();
+      };
+      xhr.send();
     }
 
     function renderList() {
@@ -344,7 +233,7 @@
 
       var list = matchesByLeague[lg.code] || [];
       if (!list.length) {
-        document.getElementById('matchesList').innerHTML = '<div class="empty">لا توجد مباريات حية معروضة حالياً في ' + lg.name + '.</div>';
+        document.getElementById('matchesList').innerHTML = '<div class="empty">لا توجد مباريات حية معروضة لبطولة ' + lg.name + ' حالياً.</div>';
         return;
       }
 
@@ -352,7 +241,7 @@
       for (var i = 0; i < list.length; i++) {
         var m = list[i];
         html += '<div class="row">' +
-          '<div class="st ' + (m.isLive ? 'live' : '') + '">' + m.status + '<br><span style="color:#94a3b8">' + (m.date || '') + '</span></div>' +
+          '<div class="st ' + (m.isLive ? 'live' : '') + '">' + m.status + '</div>' +
           '<div class="tm home">' + m.home + '</div>' +
           '<div class="sc">' + m.score + '</div>' +
           '<div class="tm away">' + m.away + '</div>' +
@@ -364,8 +253,8 @@
 
     renderLeagues();
     renderList();
-    loadLiveMatches();
-    setInterval(loadLiveMatches, AUTO_SYNC_MS);
+    loadPaidLiveMatches();
+    setInterval(loadPaidLiveMatches, AUTO_SYNC_MS);
   </script>
 </body>
 </html>
