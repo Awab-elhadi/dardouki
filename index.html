@@ -55,7 +55,7 @@
 
   <div class="wrap">
     <div class="bar">
-      <div class="title-lbl" id="currentLeagueName">دوري أبطال أوروبا</div>
+      <div class="title-lbl" id="currentLeagueName">الدوري الإسباني</div>
       <button type="button" class="btn" onclick="loadMatches()">تحديث الآن</button>
     </div>
 
@@ -72,51 +72,15 @@
   </div>
 
   <script>
-    var TSDB_BASE = 'https://www.thesportsdb.com/api/v1/json/123';
+    // ضع مفتاح API Ninjas هنا للتجربة
+    var NINJAS_API_KEY = '';
     var AUTO_SYNC_MS = 90000;
-    var currentLeague = 'cl';
-    var matchesByLeague = { cl: [], pd: [] };
-
-    var TEAM_AR = {
-      'real madrid': 'ريال مدريد',
-      'fc barcelona': 'برشلونة',
-      'barcelona': 'برشلونة',
-      'atletico madrid': 'أتلتيكو مدريد',
-      'sevilla': 'إشبيلية',
-      'real sociedad': 'ريال سوسيداد',
-      'athletic club': 'أتلتيك بيلباو',
-      'villarreal': 'فياريال',
-      'real betis': 'ريال بيتيس',
-      'girona': 'جيرونا',
-      'getafe': 'خيتافي',
-      'mallorca': 'مايوركا',
-      'las palmas': 'لاس بالماس',
-      'alaves': 'ديبورتيفو ألافيس',
-      'osasuna': 'أوساسونا',
-      'rayo vallecano': 'رايو فايكانو',
-      'celta vigo': 'سيلتا فيغو',
-      'valladolid': 'بلد الوليد',
-      'leganes': 'ليغانيس',
-      'espanyol': 'إسبانيول',
-      'fc bayern münchen': 'بايرن ميونخ',
-      'bayern munich': 'بايرن ميونخ',
-      'borussia dortmund': 'بوروسيا دورتموند',
-      'rb leipzig': 'لايبزيغ',
-      'bayer leverkusen': 'باير ليفركوزن',
-      'arsenal': 'أرسنال',
-      'liverpool': 'ليفربول',
-      'manchester city': 'مانشستر سيتي',
-      'chelsea': 'تشيلسي',
-      'inter': 'إنتر ميلان',
-      'inter milan': 'إنتر ميلان',
-      'ac milan': 'ميلان',
-      'juventus': 'يوفنتوس',
-      'paris saint-germain': 'باريس سان جيرمان'
-    };
+    var currentLeague = 'laliga';
+    var matchesByLeague = { laliga: [], ucl: [] };
 
     var LEAGUES = [
-      { code: 'cl', name: 'دوري أبطال أوروبا', tsdbId: '4480' },
-      { code: 'pd', name: 'الدوري الإسباني', tsdbId: '4335' }
+      { code: 'laliga', name: 'الدوري الإسباني' },
+      { code: 'ucl', name: 'دوري أبطال أوروبا' }
     ];
 
     function getTodayIso() {
@@ -127,34 +91,21 @@
       return y + '-' + m + '-' + day;
     }
 
-    function translateTeam(raw) {
-      if (!raw) return 'فريق';
-      var clean = String(raw).trim();
-      var low = clean.toLowerCase();
-      if (TEAM_AR[low]) return TEAM_AR[low];
-      var keys = Object.keys(TEAM_AR);
-      for (var i = 0; i < keys.length; i++) {
-        if (low.indexOf(keys[i]) !== -1) return TEAM_AR[keys[i]];
-      }
-      return clean;
-    }
-
     function getLeague(code) {
-      return code === 'pd' ? LEAGUES[1] : LEAGUES[0];
+      return code === 'ucl' ? LEAGUES[1] : LEAGUES[0];
     }
 
-    function isSoccerEvent(ev) {
-      var sport = (ev && ev.strSport) ? String(ev.strSport).toLowerCase() : 'soccer';
-      return sport === 'soccer' || sport === 'football';
-    }
-
-    function buildWatchUrl(home, away, rawVideo) {
-      if (rawVideo) {
-        var u = String(rawVideo).trim();
-        if (u.indexOf('http://') === 0 || u.indexOf('https://') === 0) return u;
-        return 'https://' + u;
-      }
+    function buildWatchUrl(home, away) {
       return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(home + ' vs ' + away);
+    }
+
+    function formatTimeFromIso(isoStr) {
+      if (!isoStr) return '';
+      var dt = new Date(isoStr);
+      if (isNaN(dt.getTime())) return String(isoStr).slice(11, 16);
+      var h = String(dt.getHours()).padStart(2, '0');
+      var min = String(dt.getMinutes()).padStart(2, '0');
+      return h + ':' + min;
     }
 
     function renderLeagues() {
@@ -174,85 +125,93 @@
       loadMatches();
     }
 
-    function fetchJson(url, ok, fail) {
-      var targets = [
-        url,
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-        'https://corsproxy.io/?' + encodeURIComponent(url)
-      ];
-      var idx = 0;
+    function parseNinjasMatches(data) {
+      var arr = Array.isArray(data) ? data : (data && Array.isArray(data.matches) ? data.matches : []);
+      var list = [];
+      for (var i = 0; i < arr.length; i++) {
+        var item = arr[i] || {};
+        var home = (item.home_team && item.home_team.name) || item.home_team || item.home || 'فريق 1';
+        var away = (item.away_team && item.away_team.name) || item.away_team || item.away || 'فريق 2';
+        var hScore = item.home_score;
+        var aScore = item.away_score;
+        var hasScore = hScore !== undefined && hScore !== null && hScore !== '' && aScore !== undefined && aScore !== null && aScore !== '';
+        var startClock = formatTimeFromIso(item.start_time || '');
+        var rawStatus = item.status ? String(item.status) : '';
+        var stLower = rawStatus.toLowerCase();
+        var isLive = stLower.indexOf('live') !== -1 || stLower.indexOf('in_progress') !== -1;
 
-      function next() {
-        if (idx >= targets.length) {
-          if (fail) fail('تعذر الاتصال');
-          return;
-        }
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', targets[idx++], true);
-        xhr.timeout = 8000;
-        xhr.onload = function () {
-          if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
-            try {
-              var raw = JSON.parse(xhr.responseText);
-              var data = (raw && typeof raw.contents === 'string') ? JSON.parse(raw.contents) : raw;
-              ok(data);
-            } catch (e) { next(); }
-          } else { next(); }
-        };
-        xhr.ontimeout = next;
-        xhr.onerror = next;
-        xhr.send();
+        var statusLabel = 'مجدولة';
+        if (isLive) statusLabel = 'مباشر';
+        else if (rawStatus === 'scheduled') statusLabel = startClock ? ('مجدولة • ' + startClock) : 'مجدولة';
+        else if (rawStatus) statusLabel = rawStatus;
+
+        list.push({
+          home: String(home),
+          away: String(away),
+          date: item.date || '',
+          score: hasScore ? (hScore + ' - ' + aScore) : (startClock || 'vs'),
+          status: statusLabel,
+          isLive: isLive,
+          watchUrl: buildWatchUrl(String(home), String(away))
+        });
       }
-      next();
+      return list;
     }
 
     function loadMatches() {
       var lg = getLeague(currentLeague);
       var badge = document.getElementById('syncBadge');
       var msg = document.getElementById('msgBox');
-      badge.innerHTML = 'جاري التحديث...';
 
-      var nextUrl = TSDB_BASE + '/eventsnextleague.php?id=' + lg.tsdbId;
-      var lastUrl = TSDB_BASE + '/eventslast.php?id=' + lg.tsdbId;
-      var combined = [];
-      var done = 0;
-
-      function mapEvents(arr) {
-        for (var i = 0; i < (arr || []).length; i++) {
-          var ev = arr[i];
-          if (!isSoccerEvent(ev)) continue;
-          var hs = ev.intHomeScore;
-          var as = ev.intAwayScore;
-          var hasScore = hs !== null && as !== null && hs !== undefined && as !== undefined && String(hs) !== '' && String(as) !== '';
-          var tPart = ev.strTime ? String(ev.strTime).slice(0, 5) : '';
-          var homeName = translateTeam(ev.strHomeTeam);
-          var awayName = translateTeam(ev.strAwayTeam);
-          combined.push({
-            home: homeName,
-            away: awayName,
-            date: ev.dateEvent || '',
-            score: hasScore ? (hs + ' - ' + as) : (tPart || 'vs'),
-            status: hasScore ? 'انتهت' : (tPart || 'مجدولة'),
-            isLive: false,
-            watchUrl: buildWatchUrl(homeName, awayName, ev.strVideo || '')
-          });
-        }
+      if (!NINJAS_API_KEY) {
+        badge.innerHTML = 'بانتظار المفتاح • 90 ث';
+        msg.style.display = 'block';
+        msg.innerHTML = 'ضع مفتاح <b>NINJAS_API_KEY</b> داخل الكود لتجربة جلب مباريات <b>' + lg.name + '</b> وتحديثها كل 90 ثانية.';
+        renderList();
+        return;
       }
 
-      function finish() {
-        done++;
-        if (done < 2) return;
-        matchesByLeague[lg.code] = combined;
-        badge.innerHTML = combined.length ? 'محدّث • كل 90 ث' : 'غير متاح';
-        msg.style.display = combined.length ? 'none' : 'block';
-        if (!combined.length) {
-          msg.innerHTML = 'لم يرجع المصدر بيانات لبطولة "' + lg.name + '" حالياً.';
+      badge.innerHTML = 'جاري التحديث...';
+      var url = 'https://api.api-ninjas.com/v1/soccermatches?league=' + encodeURIComponent(lg.code);
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.timeout = 8000;
+      xhr.setRequestHeader('X-Api-Key', NINJAS_API_KEY);
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+          try {
+            var parsed = JSON.parse(xhr.responseText);
+            matchesByLeague[lg.code] = parseNinjasMatches(parsed);
+            badge.innerHTML = 'محدّث • كل 90 ث';
+            msg.style.display = matchesByLeague[lg.code].length ? 'none' : 'block';
+            if (!matchesByLeague[lg.code].length) {
+              msg.innerHTML = 'لم يرجع API Ninjas مباريات لبطولة "' + lg.name + '" حالياً.';
+            }
+          } catch (e) {
+            badge.innerHTML = 'خطأ بيانات';
+            msg.style.display = 'block';
+            msg.innerHTML = 'تعذر قراءة بيانات الاستجابة من API Ninjas.';
+          }
+        } else {
+          badge.innerHTML = 'غير متاح';
+          msg.style.display = 'block';
+          msg.innerHTML = 'تعذر جلب البيانات من API Ninjas (رمز ' + xhr.status + '). قد يمنع المتصفح الطلب المباشر بسبب CORS.';
         }
         renderList();
-      }
-
-      fetchJson(nextUrl, function (d) { mapEvents(d && d.events); finish(); }, function () { finish(); });
-      fetchJson(lastUrl, function (d) { mapEvents(d && d.results); finish(); }, function () { finish(); });
+      };
+      xhr.ontimeout = function () {
+        badge.innerHTML = 'انتهت المهلة';
+        msg.style.display = 'block';
+        msg.innerHTML = 'انتهت مهلة الاتصال بـ API Ninjas، سيعاد المحاولة كل 90 ثانية.';
+        renderList();
+      };
+      xhr.onerror = function () {
+        badge.innerHTML = 'خطأ اتصال';
+        msg.style.display = 'block';
+        msg.innerHTML = 'تعذر الاتصال بـ API Ninjas مباشرة من المتصفح/التطبيق.';
+        renderList();
+      };
+      xhr.send();
     }
 
     function renderList() {
@@ -264,7 +223,7 @@
 
       var list = matchesByLeague[lg.code] || [];
       if (!list.length) {
-        document.getElementById('matchesList').innerHTML = '<div class="empty">لا توجد مباريات متاحة حالياً لبطولة ' + lg.name + '.</div>';
+        document.getElementById('matchesList').innerHTML = '<div class="empty">لا توجد مباريات معروضة حالياً لبطولة ' + lg.name + '.</div>';
         return;
       }
 
