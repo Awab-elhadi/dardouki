@@ -559,6 +559,14 @@
         if (outEl) outEl.textContent = state.lastDiagText;
       }
 
+      function previewPayload(payload) {
+        try {
+          return JSON.stringify(payload).slice(0, 400);
+        } catch (e) {
+          return String(payload || '').slice(0, 400);
+        }
+      }
+
       function getTodayIso() {
         var d = new Date();
         var y = d.getFullYear();
@@ -653,7 +661,7 @@
         if (!forceRefresh) {
           var cached = readCache(fullUrl, false);
           if (cached !== null) {
-            updateDiag('CACHE', 'Endpoint: ' + endpointPath + '\nSource: Cache');
+            updateDiag('CACHE', 'Endpoint: ' + endpointPath + '\nSource: Cache\nPreview:\n' + previewPayload(cached));
             return Promise.resolve(cached);
           }
         }
@@ -665,7 +673,7 @@
           if (typeof navigator !== 'undefined' && navigator.onLine === false) {
             var stale = readCache(fullUrl, true);
             if (stale !== null) {
-              updateDiag('OFFLINE_CACHE', 'Endpoint: ' + endpointPath + '\nSource: Stale Cache');
+              updateDiag('OFFLINE_CACHE', 'Endpoint: ' + endpointPath + '\nSource: Stale Cache\nPreview:\n' + previewPayload(stale));
               resolve(stale);
               return;
             }
@@ -678,7 +686,7 @@
           xhr.open('GET', fullUrl, true);
           xhr.timeout = REQUEST_TIMEOUT_MS;
           xhr.onload = function () {
-            var previewText = (xhr.responseText || '').slice(0, 350);
+            var previewText = (xhr.responseText || '').slice(0, 400);
             if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
               try {
                 var json = JSON.parse(xhr.responseText);
@@ -734,14 +742,21 @@
 
       function normalizeMatch(raw) {
         var m = raw || {};
+        if (m.match && typeof m.match === 'object') {
+          m = Object.assign({}, m.match, m);
+        }
+        if (m.event && typeof m.event === 'object') {
+          m = Object.assign({}, m.event, m);
+        }
+
         var homeObj = m.home_team || m.home || {};
         var awayObj = m.away_team || m.away || {};
         var compObj = m.competition || m.league || m.tournament || {};
 
         var homeName = getEntityName(homeObj, m.home_team_name || m.home_name || '');
         var awayName = getEntityName(awayObj, m.away_team_name || m.away_name || '');
-        var homeSlug = m.home_team_slug || getEntitySlug(homeObj) || '';
-        var awaySlug = m.away_team_slug || getEntitySlug(awayObj) || '';
+        var homeSlug = m.home_team_slug || (typeof homeObj === 'object' ? getEntitySlug(homeObj) : '') || '';
+        var awaySlug = m.away_team_slug || (typeof awayObj === 'object' ? getEntitySlug(awayObj) : '') || '';
         var matchSlug = m.slug || m.match_slug || m.id || '';
 
         var homeLogo = sanitizeLogoUrl(
@@ -755,7 +770,7 @@
         );
 
         var compName = getEntityName(compObj, m.competition_name || m.league_name || '');
-        var compSlug = m.competition_slug || getEntitySlug(compObj) || '';
+        var compSlug = m.competition_slug || (typeof compObj === 'object' ? getEntitySlug(compObj) : '') || '';
 
         var statusRaw = String(m.status_text || m.status || m.status_type || m.match_status || m.state || '').trim();
         var stLower = String(m.status || statusRaw).toLowerCase();
@@ -840,7 +855,7 @@
           var normalized = [];
           for (var i = 0; i < rawList.length; i++) {
             var item = normalizeMatch(rawList[i]);
-            if (item.homeName || item.awayName) {
+            if (item.homeName || item.awayName || item.slug) {
               normalized.push(item);
             }
           }
@@ -990,19 +1005,21 @@
       };
 
       window.openMatchDetail = function (slug) {
-        if (!slug) {
-          state.activeTab = 'match';
-          render();
-          setNotice('معرّف المباراة غير متوفر في هذه الاستجابة.', false);
-          return;
-        }
         state.activeTab = 'match';
-        state.selectedMatchSlug = slug;
         var btns = document.querySelectorAll('.tab-btn');
         for (var i = 0; i < btns.length; i++) {
           btns[i].classList.toggle('active', btns[i].getAttribute('data-tab') === 'match');
         }
         document.getElementById('sectionTitle').textContent = 'تفاصيل المباريات';
+
+        if (!slug) {
+          state.matchDetail = null;
+          render();
+          setNotice('لا يوجد معرّف (slug) لهذه المباراة في بيانات القائمة الحالية.', false);
+          return;
+        }
+
+        state.selectedMatchSlug = slug;
         setLoading(true, 'جاري تحميل تفاصيل المباراة...');
         loadMatchDetail(slug, false)
           .then(function () {
@@ -1148,13 +1165,16 @@
           var subLine = [m.compName, m.datePart].filter(Boolean).join(' • ');
           var homeClick = m.homeSlug ? ' onclick="openTeamPage(\'' + escapeHtml(m.homeSlug) + '\')"' : '';
           var awayClick = m.awaySlug ? ' onclick="openTeamPage(\'' + escapeHtml(m.awaySlug) + '\')"' : '';
+          var detailBtn = m.slug
+            ? '<button type="button" class="act-btn" onclick="openMatchDetail(\'' + escapeHtml(m.slug) + '\')">تفاصيل</button>'
+            : '<button type="button" class="btn-sec" style="width:100%" onclick="openMatchDetail(\'\')">بلا معرّف</button>';
 
           html += '<div class="row">' +
             '<div class="st ' + (m.isLive ? 'live' : '') + '">' + escapeHtml(m.statusLabel) + (subLine ? ('<br><span style="color:#94a3b8">' + escapeHtml(subLine) + '</span>') : '') + '</div>' +
             '<div class="tm home"' + homeClick + '><span>' + escapeHtml(m.homeName) + '</span>' + renderLogoHtml(m.homeLogo, m.homeName, false) + '</div>' +
             '<div class="sc">' + escapeHtml(m.scoreText) + '</div>' +
             '<div class="tm away"' + awayClick + '>' + renderLogoHtml(m.awayLogo, m.awayName, false) + '<span>' + escapeHtml(m.awayName) + '</span></div>' +
-            '<div><button type="button" class="act-btn" onclick="openMatchDetail(\'' + escapeHtml(m.slug) + '\')">تفاصيل</button></div>' +
+            '<div>' + detailBtn + '</div>' +
           '</div>';
         }
         html += '</div>';
@@ -1171,6 +1191,7 @@
         if (Array.isArray(payload.scorers)) return payload.scorers;
         if (payload.data && Array.isArray(payload.data.standings)) return payload.data.standings;
         if (payload.data && Array.isArray(payload.data.rows)) return payload.data.rows;
+        if (payload.data && Array.isArray(payload.data.topscorers)) return payload.data.topscorers;
         return [];
       }
 
@@ -1185,9 +1206,9 @@
         for (var i = 0; i < rows.length; i++) {
           var r = rows[i] || {};
           var teamObj = r.team || r;
-          var teamName = getEntityName(teamObj, r.team_name || '');
-          var teamSlug = r.team_slug || getEntitySlug(teamObj) || '';
-          var teamLogo = sanitizeLogoUrl(r.team_logo || teamObj.logo || teamObj.team_logo || '');
+          var teamName = getEntityName(teamObj, r.team_name || r.name || '');
+          var teamSlug = r.team_slug || (typeof teamObj === 'object' ? getEntitySlug(teamObj) : '') || '';
+          var teamLogo = sanitizeLogoUrl(r.team_logo || (typeof teamObj === 'object' ? (teamObj.logo || teamObj.team_logo || '') : ''));
           var pos = r.position || r.rank || (i + 1);
           var played = r.played !== undefined ? r.played : (r.matches_played !== undefined ? r.matches_played : '-');
           var won = r.win !== undefined ? r.win : (r.won !== undefined ? r.won : '-');
@@ -1222,8 +1243,8 @@
           var item = rows[i] || {};
           var playerObj = item.player || item;
           var teamObj = item.team || {};
-          var pName = getEntityName(playerObj, item.player_name || '');
-          var pLogo = sanitizeLogoUrl(item.player_logo || playerObj.logo || playerObj.player_logo || playerObj.image || '');
+          var pName = getEntityName(playerObj, item.player_name || item.name || '');
+          var pLogo = sanitizeLogoUrl(item.player_logo || (typeof playerObj === 'object' ? (playerObj.logo || playerObj.player_logo || playerObj.image || '') : ''));
           var tName = getEntityName(teamObj, item.team_name || '');
           var goals = item.goals !== undefined ? item.goals : (item.total_goals !== undefined ? item.total_goals : '-');
 
@@ -1288,13 +1309,13 @@
         }
         var d = state.matchDetail.data && typeof state.matchDetail.data === 'object' && !Array.isArray(state.matchDetail.data)
           ? state.matchDetail.data
-          : state.matchDetail;
+          : (state.matchDetail.match && typeof state.matchDetail.match === 'object' ? state.matchDetail.match : state.matchDetail);
         var norm = normalizeMatch(d);
 
         html += '<div style="display:flex;justify-content:space-around;align-items:center;gap:8px;text-align:center">' +
-            '<div>' + renderLogoHtml(norm.homeLogo, norm.homeName, true) + '<div style="font-weight:900;font-size:13px;margin-top:4px">' + escapeHtml(norm.homeName) + '</div></div>' +
-            '<div class="sc" style="font-size:16px;padding:8px 14px">' + escapeHtml(norm.scoreText) + '</div>' +
-            '<div>' + renderLogoHtml(norm.awayLogo, norm.awayName, true) + '<div style="font-weight:900;font-size:13px;margin-top:4px">' + escapeHtml(norm.awayName) + '</div></div>' +
+            '<div>' + renderLogoHtml(norm.homeLogo, norm.homeName, true) + '<div style="font-weight:900;font-size:13px;margin-top:4px">' + escapeHtml(norm.homeName || '-') + '</div></div>' +
+            '<div class="sc" style="font-size:16px;padding:8px 14px">' + escapeHtml(norm.scoreText || '-') + '</div>' +
+            '<div>' + renderLogoHtml(norm.awayLogo, norm.awayName, true) + '<div style="font-weight:900;font-size:13px;margin-top:4px">' + escapeHtml(norm.awayName || '-') + '</div></div>' +
           '</div>' +
           '<div class="kv-grid">' +
             '<div class="kv"><div class="kv-k">الحالة</div><div class="kv-v">' + escapeHtml(norm.statusLabel || '-') + '</div></div>' +
@@ -1407,74 +1428,4 @@
         } else if (tab === 'scorers') {
           container.innerHTML = renderScorersBox(state.scorers);
         } else if (tab === 'match') {
-          container.innerHTML = renderMatchDetailSection();
-        } else if (tab === 'entity') {
-          container.innerHTML = renderEntitySection();
-        }
-
-        updateDiag(state.lastDiagTag, state.lastDiagText);
-      }
-
-      window.addEventListener('beforeinstallprompt', function (ev) {
-        ev.preventDefault();
-        deferredInstallPrompt = ev;
-        var btn = document.getElementById('installPwaBtn');
-        if (btn) btn.style.display = 'inline-block';
-      });
-
-      var installBtn = document.getElementById('installPwaBtn');
-      if (installBtn) {
-        installBtn.addEventListener('click', function () {
-          if (!deferredInstallPrompt) return;
-          deferredInstallPrompt.prompt();
-          deferredInstallPrompt.userChoice.finally(function () {
-            deferredInstallPrompt = null;
-            installBtn.style.display = 'none';
-          });
-        });
-      }
-
-      window.addEventListener('online', function () {
-        syncCurrentTab(true, false);
-      });
-
-      window.addEventListener('offline', function () {
-        setSyncBadge('بدون إنترنت', true);
-        setNotice('تم فقدان الاتصال بالإنترنت. يتم عرض البيانات المحفوظة إن وجدت.', true);
-      });
-
-      if (
-        'serviceWorker' in navigator &&
-        (window.location.protocol === 'https:' || window.location.protocol === 'http:')
-      ) {
-        var swCode = [
-          "const CACHE_NAME = 'dardouki-pwa-v1';",
-          "self.addEventListener('install', (event) => {",
-          "  event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(['./'])));",
-          "  self.skipWaiting();",
-          "});",
-          "self.addEventListener('fetch', (event) => {",
-          "  if (event.request.method !== 'GET') return;",
-          "  event.respondWith(",
-          "    fetch(event.request).then((res) => {",
-          "      const copy = res.clone();",
-          "      caches.open(CACHE_NAME).then((c) => c.put(event.request, copy)).catch(() => {});",
-          "      return res;",
-          "    }).catch(() => caches.match(event.request))",
-          "  );",
-          "});"
-        ].join('\n');
-        var blob = new Blob([swCode], { type: 'application/javascript' });
-        var swUrl = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(swUrl).catch(function () {});
-      }
-
-      render();
-      syncCurrentTab(false, false);
-      setInterval(function () {
-        syncCurrentTab(false, true);
-      }, AUTO_SYNC_MS);
-    })();
-  </script>
-</body>
-</html>
+          
