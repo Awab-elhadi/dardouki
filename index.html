@@ -150,6 +150,8 @@
       font-size: 11px;
       font-weight: 800;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
     }
 
     .nav-tabs {
@@ -428,6 +430,20 @@
       word-break: break-word;
     }
 
+    .diag-pre {
+      margin: 0;
+      padding: 10px 12px;
+      background: var(--soft);
+      font-size: 11px;
+      line-height: 1.45;
+      direction: ltr;
+      text-align: left;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--txt);
+    }
+
     footer.credit {
       margin-top: 14px;
       background: var(--card);
@@ -491,6 +507,14 @@
     <div class="loading-box" id="loadingBox">جاري تحميل البيانات من SportScore...</div>
     <div id="appContent"></div>
 
+    <div class="box" id="diagBox">
+      <div class="box-h">
+        <span>حالة الاتصال واستجابة SportScore</span>
+        <span id="diagStatusTag" class="slug-tag">READY</span>
+      </div>
+      <pre class="diag-pre" id="diagOutput">في انتظار أول استجابة من SportScore...</pre>
+    </div>
+
     <footer class="credit">
       Powered by <a href="https://sportscore.com/" target="_blank" rel="noopener noreferrer">SportScore</a>
     </footer>
@@ -518,12 +542,23 @@
         selectedLeagueSlug: VERIFIED_LA_LIGA_SLUG,
         isLoading: false,
         lastUpdatedAt: 0,
-        lastError: ''
+        lastError: '',
+        lastDiagText: 'في انتظار أول استجابة من SportScore...',
+        lastDiagTag: 'READY'
       };
 
       var memCache = new Map();
       var inflightMap = new Map();
       var deferredInstallPrompt = null;
+
+      function updateDiag(tag, text) {
+        state.lastDiagTag = tag || 'INFO';
+        state.lastDiagText = text || '';
+        var tagEl = document.getElementById('diagStatusTag');
+        var outEl = document.getElementById('diagOutput');
+        if (tagEl) tagEl.textContent = state.lastDiagTag;
+        if (outEl) outEl.textContent = state.lastDiagText;
+      }
 
       function getTodayIso() {
         var d = new Date();
@@ -619,6 +654,7 @@
         if (!forceRefresh) {
           var cached = readCache(fullUrl, false);
           if (cached !== null) {
+            updateDiag('CACHE', 'Endpoint: ' + endpointPath + '\nSource: Cache');
             return Promise.resolve(cached);
           }
         }
@@ -630,9 +666,11 @@
           if (typeof navigator !== 'undefined' && navigator.onLine === false) {
             var stale = readCache(fullUrl, true);
             if (stale !== null) {
+              updateDiag('OFFLINE_CACHE', 'Endpoint: ' + endpointPath + '\nSource: Stale Cache');
               resolve(stale);
               return;
             }
+            updateDiag('OFFLINE', 'Endpoint: ' + endpointPath + '\nError: OFFLINE');
             reject(new Error('OFFLINE'));
             return;
           }
@@ -641,22 +679,28 @@
           xhr.open('GET', fullUrl, true);
           xhr.timeout = REQUEST_TIMEOUT_MS;
           xhr.onload = function () {
+            var previewText = (xhr.responseText || '').slice(0, 350);
             if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
               try {
                 var json = JSON.parse(xhr.responseText);
                 writeCache(fullUrl, json);
+                updateDiag('HTTP_' + xhr.status + '_JSON', 'Endpoint: ' + endpointPath + '\nPayload Preview:\n' + previewText);
                 resolve(json);
               } catch (err) {
+                updateDiag('HTTP_' + xhr.status + '_NON_JSON', 'Endpoint: ' + endpointPath + '\nResponse Preview:\n' + previewText);
                 reject(new Error('PARSE_ERROR'));
               }
             } else {
+              updateDiag('HTTP_' + xhr.status, 'Endpoint: ' + endpointPath + '\nResponse Preview:\n' + previewText);
               reject(new Error('HTTP_' + xhr.status));
             }
           };
           xhr.ontimeout = function () {
+            updateDiag('TIMEOUT', 'Endpoint: ' + endpointPath + '\nError: TIMEOUT');
             reject(new Error('TIMEOUT'));
           };
           xhr.onerror = function () {
+            updateDiag('NETWORK_ERROR', 'Endpoint: ' + endpointPath + '\nError: NETWORK_ERROR (status=' + xhr.status + ')');
             reject(new Error('NETWORK_ERROR'));
           };
           xhr.send();
@@ -974,6 +1018,17 @@
           });
       };
 
+      window.submitMatchLookup = function (ev) {
+        ev.preventDefault();
+        var inp = document.getElementById('matchSlugInput');
+        var slug = inp ? inp.value.trim() : '';
+        if (!slug) {
+          setNotice('أدخل معرّف المباراة (MATCH_SLUG) أولاً.', false);
+          return;
+        }
+        openMatchDetail(slug);
+      };
+
       window.openTeamPage = function (slug) {
         if (!slug) {
           setNotice('معرّف الفريق غير متوفر في البيانات الحالية.', false);
@@ -1220,9 +1275,15 @@
       }
 
       function renderMatchDetailSection() {
-        var html = '<div class="box"><div class="box-h"><span>تفاصيل المباراة</span><span>' + escapeHtml(state.selectedMatchSlug || '-') + '</span></div>';
+        var html = '<div class="box"><div class="box-h"><span>تفاصيل المباراة</span><span>' + escapeHtml(state.selectedMatchSlug || '-') + '</span></div>' +
+          '<div class="detail-card">' +
+            '<form class="lookup-form" style="margin-top:0;margin-bottom:10px" onsubmit="submitMatchLookup(event)">' +
+              '<input class="inp" id="matchSlugInput" type="text" placeholder="أدخل معرّف المباراة MATCH_SLUG" value="' + escapeHtml(state.selectedMatchSlug) + '" />' +
+              '<button class="btn" type="submit">جلب المباراة</button>' +
+            '</form>';
+
         if (!state.matchDetail) {
-          html += '<div class="empty">اختر زر "تفاصيل" من أي مباراة لعرض بياناتها من SportScore.</div></div>';
+          html += '<div class="empty">اختر زر "تفاصيل" من مباراة أو أدخل معرّف المباراة لعرض بياناتها من SportScore.</div></div></div>';
           return html;
         }
         var d = state.matchDetail.data && typeof state.matchDetail.data === 'object' && !Array.isArray(state.matchDetail.data)
@@ -1230,8 +1291,7 @@
           : state.matchDetail;
         var norm = normalizeMatch(d);
 
-        html += '<div class="detail-card">' +
-          '<div style="display:flex;justify-content:space-around;align-items:center;gap:8px;text-align:center">' +
+        html += '<div style="display:flex;justify-content:space-around;align-items:center;gap:8px;text-align:center">' +
             '<div>' + renderLogoHtml(norm.homeLogo, norm.homeName, true) + '<div style="font-weight:900;font-size:13px;margin-top:4px">' + escapeHtml(norm.homeName) + '</div></div>' +
             '<div class="sc" style="font-size:16px;padding:8px 14px">' + escapeHtml(norm.scoreText) + '</div>' +
             '<div>' + renderLogoHtml(norm.awayLogo, norm.awayName, true) + '<div style="font-weight:900;font-size:13px;margin-top:4px">' + escapeHtml(norm.awayName) + '</div></div>' +
@@ -1332,53 +1392,27 @@
           out += renderStandingsBox(state.standings);
           out += renderScorersBox(state.scorers);
           container.innerHTML = out;
-          return;
-        }
-
-        if (tab === 'live') {
+        } else if (tab === 'live') {
           container.innerHTML = renderMatchesBox('المباريات المباشرة', filterMatchesByMode('live'), 'لا توجد مباريات مباشرة حالياً.');
-          return;
-        }
-
-        if (tab === 'today') {
+        } else if (tab === 'today') {
           container.innerHTML = renderMatchesBox('مباريات اليوم', filterMatchesByMode('today'), 'لا توجد مباريات لليوم في البيانات الحالية.');
-          return;
-        }
-
-        if (tab === 'upcoming') {
+        } else if (tab === 'upcoming') {
           container.innerHTML = renderMatchesBox('المباريات القادمة', filterMatchesByMode('upcoming'), 'لا توجد مباريات قادمة متاحة حالياً.');
-          return;
-        }
-
-        if (tab === 'results') {
+        } else if (tab === 'results') {
           container.innerHTML = renderMatchesBox('النتائج السابقة', filterMatchesByMode('results'), 'لا توجد نتائج سابقة متاحة حالياً.');
-          return;
-        }
-
-        if (tab === 'leagues') {
+        } else if (tab === 'leagues') {
           container.innerHTML = renderLeaguesSection();
-          return;
-        }
-
-        if (tab === 'standings') {
+        } else if (tab === 'standings') {
           container.innerHTML = renderStandingsBox(state.standings);
-          return;
-        }
-
-        if (tab === 'scorers') {
+        } else if (tab === 'scorers') {
           container.innerHTML = renderScorersBox(state.scorers);
-          return;
-        }
-
-        if (tab === 'match') {
+        } else if (tab === 'match') {
           container.innerHTML = renderMatchDetailSection();
-          return;
+        } else if (tab === 'entity') {
+          container.innerHTML = renderEntitySection();
         }
 
-        if (tab === 'entity') {
-          container.innerHTML = renderEntitySection();
-          return;
-        }
+        updateDiag(state.lastDiagTag, state.lastDiagText);
       }
 
       window.addEventListener('beforeinstallprompt', function (ev) {
