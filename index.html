@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DARDOUKI - المباريات</title>
+  <title>DARDOUKI - كرة القدم</title>
   <style>
     :root{
       --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
@@ -49,13 +49,13 @@
 </head>
 <body>
   <header>
-    <div class="brand">⚡ <span>DARDOUKI</span></div>
-    <div class="sync" id="syncBadge">تحديث كل 90 ث</div>
+    <div class="brand">⚽ <span>DARDOUKI</span></div>
+    <div class="sync" id="syncBadge">كرة القدم • كل 90 ث</div>
   </header>
 
   <div class="wrap">
     <div class="bar">
-      <div class="today-lbl" id="todayTitle">مباريات اليوم</div>
+      <div class="today-lbl" id="todayTitle">مباريات كرة القدم</div>
       <button type="button" class="btn" onclick="loadMatches()">تحديث الآن</button>
     </div>
 
@@ -119,13 +119,13 @@
     };
 
     var LEAGUES = [
-      { code: 'bl1', name: 'الدوري الألماني', openliga: 'bl1', season: '2026', tsdbId: '4331', tsdbSeason: '2026-2027' },
-      { code: 'pl', name: 'الدوري الإنجليزي', openliga: '', season: '', tsdbId: '4328', tsdbSeason: '2026-2027' },
-      { code: 'pd', name: 'الدوري الإسباني', openliga: '', season: '', tsdbId: '4335', tsdbSeason: '2026-2027' },
-      { code: 'cl', name: 'دوري أبطال أوروبا', openliga: '', season: '', tsdbId: '4480', tsdbSeason: '2026-2027' },
-      { code: 'sa', name: 'الدوري الإيطالي', openliga: '', season: '', tsdbId: '4332', tsdbSeason: '2026-2027' },
-      { code: 'spl', name: 'الدوري السعودي', openliga: '', season: '', tsdbId: '4668', tsdbSeason: '2026-2027' },
-      { code: 'egy', name: 'الدوري المصري', openliga: '', season: '', tsdbId: '4498', tsdbSeason: '2026-2027' }
+      { code: 'bl1', name: 'الدوري الألماني', openliga: 'bl1', season: '2026', tsdbId: '4331' },
+      { code: 'pl', name: 'الدوري الإنجليزي', openliga: '', season: '', tsdbId: '4328' },
+      { code: 'pd', name: 'الدوري الإسباني', openliga: '', season: '', tsdbId: '4335' },
+      { code: 'cl', name: 'دوري أبطال أوروبا', openliga: '', season: '', tsdbId: '4480' },
+      { code: 'sa', name: 'الدوري الإيطالي', openliga: '', season: '', tsdbId: '4332' },
+      { code: 'spl', name: 'الدوري السعودي', openliga: '', season: '', tsdbId: '4668' },
+      { code: 'egy', name: 'الدوري المصري', openliga: '', season: '', tsdbId: '4498' }
     ];
 
     function getTodayIso() {
@@ -153,6 +153,11 @@
         if (LEAGUES[i].code === code) return LEAGUES[i];
       }
       return LEAGUES[0];
+    }
+
+    function isSoccerEvent(ev) {
+      var sport = (ev && ev.strSport) ? String(ev.strSport).toLowerCase() : 'soccer';
+      return sport === 'soccer' || sport === 'football';
     }
 
     function renderLeagues() {
@@ -210,7 +215,7 @@
         if (u.indexOf('http://') === 0 || u.indexOf('https://') === 0) return u;
         return 'https://' + u;
       }
-      return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(home + ' vs ' + away + ' مباراة');
+      return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(home + ' vs ' + away + ' كرة قدم');
     }
 
     function loadMatches() {
@@ -245,13 +250,13 @@
             });
           }
           matchesByLeague[lg.code] = list;
-          badge.innerHTML = 'محدّث • كل 90 ث';
+          badge.innerHTML = 'كرة القدم • كل 90 ث';
           msg.style.display = 'none';
           renderList();
         }, function (err) {
           badge.innerHTML = 'غير متاح';
           msg.style.display = 'block';
-          msg.innerHTML = 'تعذر جلب البيانات لبطولة "' + lg.name + '" (' + err + ').';
+          msg.innerHTML = 'تعذر جلب مباريات كرة القدم لبطولة "' + lg.name + '" (' + err + ').';
           renderList();
         });
       } else {
@@ -264,10 +269,10 @@
           done++;
           if (done < 2) return;
           matchesByLeague[lg.code] = combined;
-          badge.innerHTML = combined.length ? 'محدّث • كل 90 ث' : 'غير متاح';
+          badge.innerHTML = combined.length ? 'كرة القدم • كل 90 ث' : 'غير متاح';
           msg.style.display = combined.length ? 'none' : 'block';
           if (!combined.length) {
-            msg.innerHTML = 'لم ترجع خدمة المصدر بيانات لبطولة "' + lg.name + '" حالياً.';
+            msg.innerHTML = 'لم ترجع خدمة المصدر مباريات كرة قدم لبطولة "' + lg.name + '" حالياً.';
           }
           renderList();
         }
@@ -275,6 +280,7 @@
         function mapEvents(arr) {
           for (var i = 0; i < (arr || []).length; i++) {
             var ev = arr[i];
+            if (!isSoccerEvent(ev)) continue;
             var hs = ev.intHomeScore;
             var as = ev.intAwayScore;
             var hasScore = hs !== null && as !== null && hs !== undefined && as !== undefined && String(hs) !== '' && String(as) !== '';
@@ -312,11 +318,11 @@
 
       var showList = todayList.length ? todayList : all;
       document.getElementById('todayTitle').innerHTML = todayList.length
-        ? ('مباريات اليوم (' + today + ')')
-        : ('مباريات ' + lg.name + ' (لا توجد مباريات اليوم ' + today + ')');
+        ? ('مباريات كرة القدم اليوم (' + today + ')')
+        : ('مباريات كرة القدم - ' + lg.name);
 
       if (!showList.length) {
-        document.getElementById('matchesList').innerHTML = '<div class="empty">لا توجد مباريات متاحة حالياً في ' + lg.name + '.</div>';
+        document.getElementById('matchesList').innerHTML = '<div class="empty">لا توجد مباريات كرة قدم متاحة حالياً في ' + lg.name + '.</div>';
         return;
       }
 
