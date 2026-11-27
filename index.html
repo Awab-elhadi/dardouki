@@ -49,7 +49,7 @@
     .comp-head{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#fff}
     .comp-title{font-weight:900;font-size:14px;color:var(--txt)}
     .comp-sub{font-size:11px;color:var(--muted)}
-    .round-bar{background:#f8fafc;color:var(--muted);font-size:11px;font-weight:700;padding:6px 12px;border-bottom:1px solid var(--line)}
+    .round-bar{background:#f8fafc;color:var(--muted);font-size:11px;font-weight:700;padding:6px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
 
     .match-row{padding:10px 12px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:80px 1fr auto 1fr 84px;align-items:center;gap:6px}
     .match-row:last-child{border-bottom:none}
@@ -192,7 +192,8 @@
     <div id="matchesControls">
       <div class="days-strip" id="daysStrip"></div>
       <div class="filter-row">
-        <button type="button" class="f-chip active" id="fc_all" onclick="pickStatusFilter('all')">الكل</button>
+        <button type="button" class="f-chip active" id="fc_all_range" onclick="pickStatusFilter('all_range')">الفاتت والقادمة</button>
+        <button type="button" class="f-chip" id="fc_day" onclick="pickStatusFilter('day')">حسب اليوم المحدد</button>
         <button type="button" class="f-chip" id="fc_live" onclick="pickStatusFilter('live')">مباشر</button>
         <button type="button" class="f-chip" id="fc_fav" onclick="pickStatusFilter('fav')">المفضلة</button>
       </div>
@@ -208,7 +209,7 @@
     <input class="search" id="q" placeholder="ابحث عن فريق، مباراة، نسخة كأس العالم، لاعب، أو بطولة..." onkeyup="renderAll()" />
     <div class="leagues" id="leaguesBar"></div>
     <div class="notice" id="noticeBox">
-      يعرض التطبيق البيانات الحية والتاريخية من المصادر المتاحة أو ملفات البيانات المربوطة دون أي بيانات مختلقة أو وهمية.
+      يعرض التطبيق المباريات الفاتت والقادمة والتحديثات كل 90 ثانية من المصادر المتاحة أو ملفات البيانات المربوطة دون أي بيانات وهمية أو مختلقة.
     </div>
     <div id="view"></div>
   </div>
@@ -224,14 +225,12 @@
     var currentSection = 'matches';
     var currentLeague = 'bl1';
     var selectedDate = getIsoDate(0);
-    var statusFilter = 'all';
+    var statusFilter = 'all_range';
     var archiveFilter = 'all';
     var favTeams = {};
 
     var matchesByLeague = {};
     var standingsByLeague = {};
-    // مخازن البيانات الموسّعة: مباريات تاريخية من قبل 2000 + نسخ كأس العالم + اللاعبون والبطولات الفردية والجماعية
-    // تُملأ فقط من مصادر حية أو ملفات JSON يربطها المستخدم دون أي بيانات وهمية أو متخيلة
     var archiveMatches = [];
     var playersDirectory = [];
     var externalFeedUrl = '';
@@ -327,8 +326,8 @@
       { code: 'pd', name: 'الدوري الإسباني', country: 'إسبانيا', tier: 'كبرى', openligaShortcut: '', openligaSeason: '', tsdbId: '4335', tsdbSeason: '2026-2027' },
       { code: 'cl', name: 'دوري أبطال أوروبا', country: 'أوروبا', tier: 'قارية', openligaShortcut: '', openligaSeason: '', tsdbId: '4480', tsdbSeason: '2026-2027' },
       { code: 'sa', name: 'الدوري الإيطالي', country: 'إيطاليا', tier: 'كبرى', openligaShortcut: '', openligaSeason: '', tsdbId: '4332', tsdbSeason: '2026-2027' },
-      { code: 'spl', name: 'الدوري السعودي', country: 'السعودية', tier: 'محلية', openligaShortcut: '', openligaSeason: '', tsdbId: '4668', tsdbSeason: '2026-2027' },
-      { code: 'egy', name: 'الدوري المصري', country: 'مصر', tier: 'محلية', openligaShortcut: '', openligaSeason: '', tsdbId: '4498', tsdbSeason: '2026-2027' },
+      { code: 'spl', name: 'الدوري السعودي', country: 'السعودية', openligaShortcut: '', openligaSeason: '', tsdbId: '4668', tsdbSeason: '2026-2027' },
+      { code: 'egy', name: 'الدوري المصري', country: 'مصر', openligaShortcut: '', openligaSeason: '', tsdbId: '4498', tsdbSeason: '2026-2027' },
       { code: 'wc', name: 'كأس العالم (كل النسخ)', country: 'دولي', tier: 'مونديال', openligaShortcut: '', openligaSeason: '', tsdbId: '', tsdbSeason: '' },
       { code: 'minor', name: 'الدوريات الصغرى والدرجات', country: 'متعدد', tier: 'صغرى', openligaShortcut: '', openligaSeason: '', tsdbId: '', tsdbSeason: '' }
     ];
@@ -405,15 +404,22 @@
 
     function pickDate(iso) {
       selectedDate = iso;
+      statusFilter = 'day';
+      updateFilterButtons();
       renderDaysStrip();
       renderAll();
     }
 
+    function updateFilterButtons() {
+      document.getElementById('fc_all_range').className = 'f-chip' + (statusFilter === 'all_range' ? ' active' : '');
+      document.getElementById('fc_day').className = 'f-chip' + (statusFilter === 'day' ? ' active' : '');
+      document.getElementById('fc_live').className = 'f-chip' + (statusFilter === 'live' ? ' active' : '');
+      document.getElementById('fc_fav').className = 'f-chip' + (statusFilter === 'fav' ? ' active' : '');
+    }
+
     function pickStatusFilter(f) {
       statusFilter = f;
-      document.getElementById('fc_all').className = 'f-chip' + (f === 'all' ? ' active' : '');
-      document.getElementById('fc_live').className = 'f-chip' + (f === 'live' ? ' active' : '');
-      document.getElementById('fc_fav').className = 'f-chip' + (f === 'fav' ? ' active' : '');
+      updateFilterButtons();
       renderAll();
     }
 
@@ -429,6 +435,8 @@
 
     function pickLeague(code) {
       currentLeague = code;
+      statusFilter = 'all_range';
+      updateFilterButtons();
       renderLeagues();
       renderAll();
       syncLeague();
@@ -444,23 +452,46 @@
       document.getElementById('leaguesBar').innerHTML = html;
     }
 
-    function xhrGet(url, ok, fail) {
-      try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.timeout = 8000;
-        xhr.onload = function () {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try { ok(JSON.parse(xhr.responseText)); }
-            catch (e) { if (fail) fail('تعذر قراءة الاستجابة'); }
-          } else if (fail) fail('HTTP ' + xhr.status);
-        };
-        xhr.ontimeout = function () { if (fail) fail('انتهت المهلة'); };
-        xhr.onerror = function () { if (fail) fail('خطأ اتصال'); };
-        xhr.send();
-      } catch (e) {
-        if (fail) fail('تعذر الطلب');
+    function fetchJsonWithFallback(url, ok, fail) {
+      var proxies = [
+        url,
+        'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+        'https://corsproxy.io/?' + encodeURIComponent(url)
+      ];
+      var idx = 0;
+
+      function tryNext() {
+        if (idx >= proxies.length) {
+          if (fail) fail('تعذر الاتصال بالمصدر');
+          return;
+        }
+        var target = proxies[idx++];
+        try {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', target, true);
+          xhr.timeout = 8000;
+          xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+              try {
+                var raw = JSON.parse(xhr.responseText);
+                var data = (raw && typeof raw.contents === 'string') ? JSON.parse(raw.contents) : raw;
+                ok(data);
+              } catch (e) {
+                tryNext();
+              }
+            } else {
+              tryNext();
+            }
+          };
+          xhr.ontimeout = tryNext;
+          xhr.onerror = tryNext;
+          xhr.send();
+        } catch (e) {
+          tryNext();
+        }
       }
+
+      tryNext();
     }
 
     function parseOpenLigaMatches(rows, lg) {
@@ -482,7 +513,7 @@
         var timePart = dtRaw.slice(11, 16);
         var roundName = (m.group && m.group.groupName) ? translateRound(m.group.groupName) : 'الجولة';
         var isLive = !m.matchIsFinished && hasRes;
-        var statusLabel = m.matchIsFinished ? 'انتهت' : (isLive ? 'مباشر' : (timePart || 'مجدولة'));
+        var statusLabel = m.matchIsFinished ? 'انتهت' : (isLive ? 'مباشر' : (timePart || 'قادمة'));
 
         list.push({
           id: 'ol_' + (m.matchID || i),
@@ -493,7 +524,7 @@
           time: timePart,
           home: home,
           away: away,
-          scoreOrTime: hasRes ? scoreText : (timePart || 'vs'),
+          scoreOrTime: hasRes ? scoreText : (timePart || 'قادمة'),
           statusLabel: statusLabel,
           isLive: isLive,
           stadium: m.location ? ((m.location.locationCity ? m.location.locationCity + ' - ' : '') + (m.location.locationStadium || '')) : '',
@@ -546,13 +577,13 @@
         id: 'ts_' + (ev.idEvent || (ev.strHomeTeam + '_' + ev.strAwayTeam + '_' + ev.dateEvent)),
         league: lg.name,
         country: lg.country,
-        round: ev.intRound ? ('الجولة ' + ev.intRound) : (upcoming ? 'مباريات قادمة' : 'نتائج سابقة'),
+        round: ev.intRound ? ('الجولة ' + ev.intRound) : (upcoming ? 'مباريات قادمة' : 'مباريات سابقة'),
         date: ev.dateEvent || '',
         time: timePart,
         home: translateTeam(ev.strHomeTeam || 'فريق 1'),
         away: translateTeam(ev.strAwayTeam || 'فريق 2'),
-        scoreOrTime: hasScore ? (hs + ' - ' + as) : (timePart || 'vs'),
-        statusLabel: hasScore ? 'انتهت' : (timePart || 'مجدولة'),
+        scoreOrTime: hasScore ? (hs + ' - ' + as) : (timePart || 'قادمة'),
+        statusLabel: hasScore ? 'انتهت' : (timePart || 'قادمة'),
         isLive: false,
         stadium: ev.strVenue || '',
         referee: '',
@@ -593,7 +624,7 @@
       st.innerHTML = 'جاري الجلب...';
 
       if (externalFeedUrl) {
-        xhrGet(externalFeedUrl, function (data) {
+        fetchJsonWithFallback(externalFeedUrl, function (data) {
           applyExternalFeedData(data);
           st.innerHTML = 'محدّث • كل 90 ث';
           notice.style.display = 'none';
@@ -629,8 +660,8 @@
           renderAll();
         }
 
-        xhrGet(mUrl, function (d) { matchesByLeague[lg.code] = parseOpenLigaMatches(d, lg); finish(); }, function (e) { errs.push('مباريات: ' + e); finish(); });
-        xhrGet(tUrl, function (d) { standingsByLeague[lg.code] = parseOpenLigaStandings(d); finish(); }, function (e) { errs.push('ترتيب: ' + e); finish(); });
+        fetchJsonWithFallback(mUrl, function (d) { matchesByLeague[lg.code] = parseOpenLigaMatches(d, lg); finish(); }, function (e) { errs.push('مباريات: ' + e); finish(); });
+        fetchJsonWithFallback(tUrl, function (d) { standingsByLeague[lg.code] = parseOpenLigaStandings(d); finish(); }, function (e) { errs.push('ترتيب: ' + e); finish(); });
       } else if (lg.tsdbId) {
         var nextUrl = TSDB_BASE + '/eventsnextleague.php?id=' + lg.tsdbId;
         var lastUrl = TSDB_BASE + '/eventslast.php?id=' + lg.tsdbId;
@@ -651,24 +682,24 @@
           } else {
             st.innerHTML = 'غير متاح';
             notice.style.display = 'block';
-            notice.innerHTML = 'لم تتوفر بيانات حية لبطولة "' + lg.name + '" من المصدر المباشر حالياً' + (tsErrs.length ? ' (' + tsErrs.join(' | ') + ')' : '') + '. يمكنك ربط ملف JSON للبيانات الموسّعة من الزر بالأعلى.';
+            notice.innerHTML = 'لم ترجع خدمة المصدر بيانات لبطولة "' + lg.name + '" حالياً' + (tsErrs.length ? ' (' + tsErrs.join(' | ') + ')' : '') + '. يمكنك ربط ملف JSON للبيانات من الزر بالأعلى.';
           }
           renderAll();
         }
 
-        xhrGet(nextUrl, function (d) {
+        fetchJsonWithFallback(nextUrl, function (d) {
           var arr = d && Array.isArray(d.events) ? d.events : [];
           for (var i = 0; i < arr.length; i++) collected.push(parseTsdbEvent(arr[i], lg, true));
           finishTs();
         }, function (e) { tsErrs.push('قادمة: ' + e); finishTs(); });
 
-        xhrGet(lastUrl, function (d) {
+        fetchJsonWithFallback(lastUrl, function (d) {
           var arr = d && Array.isArray(d.results) ? d.results : [];
           for (var i = 0; i < arr.length; i++) collected.push(parseTsdbEvent(arr[i], lg, false));
           finishTs();
         }, function (e) { tsErrs.push('سابقة: ' + e); finishTs(); });
 
-        xhrGet(tblUrl, function (d) {
+        fetchJsonWithFallback(tblUrl, function (d) {
           var arr = d && Array.isArray(d.table) ? d.table : [];
           var mapped = [];
           for (var i = 0; i < arr.length; i++) {
@@ -696,7 +727,7 @@
       } else {
         st.innerHTML = 'موسوعة البيانات';
         notice.style.display = 'block';
-        notice.innerHTML = 'قسم "' + lg.name + '" مخصص لعرض البيانات الموثّقة المربوطة أو المستوردة من ملف JSON حقيقي (أرشيف ما قبل 2000، كأس العالم، الدوريات الصغرى، واللاعبون وبطولاتهم) دون أي حشو وهمي.';
+        notice.innerHTML = 'قسم "' + lg.name + '" مخصص للبيانات الموثّقة المربوطة أو المستوردة من ملف JSON حقيقي (أرشيف ما قبل 2000، كأس العالم، الدوريات الصغرى، واللاعبون وبطولاتهم) دون أي حشو وهمي.';
         renderAll();
       }
     }
@@ -715,7 +746,7 @@
           '</div>' +
           '<div class="sec-box">' +
             '<div class="sec-h">لصق بيانات JSON مباشرة في الجلسة</div>' +
-            '<textarea id="jsonPasteInput" rows="7" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;font-size:11px" placeholder=\'{"archiveMatches":[],"players":[]}\'></textarea>' +
+            '<textarea id="jsonPasteInput" dir="ltr" rows="7" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;font-size:11px;text-align:left" placeholder=\'{"archiveMatches":[],"players":[]}\'></textarea>' +
             '<div style="margin-top:8px"><button type="button" class="act-btn" onclick="importPastedJson()">استيراد البيانات الآن</button></div>' +
           '</div>' +
         '</div>';
@@ -945,6 +976,7 @@
     }
 
     function renderArchiveView(q) {
+      var lg = getLeague(currentLeague);
       var list = archiveMatches || [];
       var filtered = [];
       for (var i = 0; i < list.length; i++) {
@@ -961,7 +993,7 @@
         filtered.push(m);
       }
       if (!filtered.length) {
-        return '<div class="info-card"><div class="info-title">أرشيف المباريات التاريخية وكأس العالم</div>' +
+        return '<div class="info-card"><div class="info-title">أرشيف المباريات التاريخية وكأس العالم (' + lg.name + ')</div>' +
           '<div class="info-meta">لا توجد سجلات أرشيف محمّلة حالياً لهذا الفلتر. يمكنك ربط ملف JSON للبيانات التاريخية (من قبل 2000 وكأس العالم والدوريات الصغرى) من زر "ربط ملف/مصدر بيانات JSON" دون أي بيانات وهمية.</div></div>';
       }
       var html = '<div class="grid-cards">';
@@ -1034,7 +1066,7 @@
 
       for (var i = 0; i < allMatches.length; i++) {
         var m = allMatches[i];
-        if (selectedDate && m.date && m.date !== selectedDate) continue;
+        if (statusFilter === 'day' && selectedDate && m.date && m.date !== selectedDate) continue;
         if (statusFilter === 'live' && !m.isLive) continue;
         if (statusFilter === 'fav' && !favTeams[m.home] && !favTeams[m.away]) continue;
         if (q) {
@@ -1045,7 +1077,7 @@
       }
 
       if (!filtered.length) {
-        view.innerHTML = '<div class="comp-block"><div style="padding:18px;text-align:center;color:#64748b;font-size:12px">لا توجد مباريات في تاريخ ' + selectedDate + ' للفلتر أو البطولة المحددة</div></div>';
+        view.innerHTML = '<div class="comp-block"><div style="padding:18px;text-align:center;color:#64748b;font-size:12px">لا توجد مباريات متاحة حالياً للفلتر أو البطولة المحددة</div></div>';
         return;
       }
 
@@ -1053,9 +1085,10 @@
       var lastRound = '';
       for (var j = 0; j < filtered.length; j++) {
         var item = filtered[j];
-        if (item.round && item.round !== lastRound) {
-          rowsHtml += '<div class="round-bar">' + item.round + '</div>';
-          lastRound = item.round;
+        var groupKey = (item.round || 'الجولة') + (item.date ? ' • ' + item.date : '');
+        if (groupKey && groupKey !== lastRound) {
+          rowsHtml += '<div class="round-bar"><span>' + (item.round || 'الجولة') + '</span><span>' + (item.date || '') + '</span></div>';
+          lastRound = groupKey;
         }
         rowsHtml += '<div class="match-row">' +
           '<div class="m-status-col ' + (item.isLive ? 'live' : '') + '">' + item.statusLabel + '</div>' +
@@ -1066,8 +1099,9 @@
         '</div>';
       }
 
+      var subRangeLabel = (statusFilter === 'day') ? ('تاريخ: ' + selectedDate) : 'المباريات الفاتت والقادمة';
       view.innerHTML = '<div class="comp-block">' +
-        '<div class="comp-head"><div><div class="comp-title">' + lg.name + '</div><div class="comp-sub">' + lg.country + '</div></div><div class="comp-sub">' + selectedDate + '</div></div>' +
+        '<div class="comp-head"><div><div class="comp-title">' + lg.name + '</div><div class="comp-sub">' + lg.country + '</div></div><div class="comp-sub">' + subRangeLabel + '</div></div>' +
         rowsHtml +
       '</div>';
     }
