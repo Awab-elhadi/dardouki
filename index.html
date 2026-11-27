@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DARDOUKI - مباريات الدوريات والبطولات</title>
+  <title>DARDOUKI - الدوري الإسباني</title>
   <style>
     :root{
       --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
@@ -21,10 +21,6 @@
     .bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;background:#fff;padding:10px 12px;border-radius:10px;border:1px solid var(--line)}
     .title-lbl{font-size:13px;font-weight:900}
     .btn{background:#0f172a;color:#fff;border:none;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer}
-
-    .leagues{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
-    .lg-chip{white-space:nowrap;background:#fff;color:var(--txt);border:1px solid var(--line);padding:6px 12px;border-radius:99px;font-size:11px;font-weight:800;cursor:pointer}
-    .lg-chip.active{background:var(--acc);color:#fff;border-color:var(--acc)}
 
     .msg{background:#fffbeb;border:1px solid #fde68a;color:var(--acc-dark);padding:9px 11px;border-radius:8px;font-size:12px;margin-bottom:10px;display:none}
 
@@ -55,16 +51,15 @@
 
   <div class="wrap">
     <div class="bar">
-      <div class="title-lbl" id="currentLeagueName">الدوري الإسباني</div>
-      <button type="button" class="btn" onclick="loadMatches()">تحديث الآن</button>
+      <div class="title-lbl">الدوري الإسباني</div>
+      <button type="button" class="btn" onclick="loadLaliga()">تحديث الآن</button>
     </div>
 
-    <div class="leagues" id="leaguesBar"></div>
     <div class="msg" id="msgBox"></div>
 
     <div class="box">
       <div class="box-h">
-        <span id="boxTitle">مباريات البطولة</span>
+        <span>مباريات الدوري الإسباني</span>
         <span id="todayIso" style="font-size:11px;color:#64748b"></span>
       </div>
       <div id="matchesList"></div>
@@ -74,20 +69,8 @@
   <script>
     var NINJAS_API_KEY = '8GfktW80IcFGeHARH8YjwY20AG6WvqbkyManYSTQ';
     var AUTO_SYNC_MS = 90000;
-    var REQUEST_TIMEOUT_MS = 15000;
-    var currentLeague = 'laliga';
-    var matchesByLeague = {};
-
-    var LEAGUES = [
-      { code: 'laliga', name: 'الدوري الإسباني' },
-      { code: 'ucl', name: 'دوري أبطال أوروبا' },
-      { code: 'epl', name: 'الدوري الإنجليزي' },
-      { code: 'bundesliga', name: 'الدوري الألماني' },
-      { code: 'seriea', name: 'الدوري الإيطالي' },
-      { code: 'ligue1', name: 'الدوري الفرنسي' },
-      { code: 'uel', name: 'الدوري الأوروبي' },
-      { code: 'mls', name: 'الدوري الأمريكي' }
-    ];
+    var REQUEST_TIMEOUT_MS = 12000;
+    var laligaMatches = [];
 
     function getTodayIso() {
       var d = new Date();
@@ -95,13 +78,6 @@
       var m = String(d.getMonth() + 1).padStart(2, '0');
       var day = String(d.getDate()).padStart(2, '0');
       return y + '-' + m + '-' + day;
-    }
-
-    function getLeague(code) {
-      for (var i = 0; i < LEAGUES.length; i++) {
-        if (LEAGUES[i].code === code) return LEAGUES[i];
-      }
-      return LEAGUES[0];
     }
 
     function buildWatchUrl(home, away) {
@@ -115,23 +91,6 @@
       var h = String(dt.getHours()).padStart(2, '0');
       var min = String(dt.getMinutes()).padStart(2, '0');
       return h + ':' + min;
-    }
-
-    function renderLeagues() {
-      var html = '';
-      for (var i = 0; i < LEAGUES.length; i++) {
-        var l = LEAGUES[i];
-        var cls = 'lg-chip' + (currentLeague === l.code ? ' active' : '');
-        html += '<button type="button" class="' + cls + '" onclick="selectLeague(\'' + l.code + '\')">' + l.name + '</button>';
-      }
-      document.getElementById('leaguesBar').innerHTML = html;
-    }
-
-    function selectLeague(code) {
-      currentLeague = code;
-      renderLeagues();
-      renderList();
-      loadMatches();
     }
 
     function parseNinjasMatches(data) {
@@ -171,7 +130,7 @@
       return list;
     }
 
-    function fetchWithTimeout(url, headers, timeoutMs) {
+    function fetchJsonWithTimeout(url, headers, timeoutMs) {
       return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
@@ -186,7 +145,11 @@
         xhr.onload = function () {
           if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
             try {
-              resolve(JSON.parse(xhr.responseText));
+              var obj = JSON.parse(xhr.responseText);
+              if (obj && typeof obj.contents === 'string') {
+                obj = JSON.parse(obj.contents);
+              }
+              resolve(obj);
             } catch (e) {
               reject(new Error('PARSE_ERROR'));
             }
@@ -204,67 +167,61 @@
       });
     }
 
-    function fetchNinjasLeague(leagueCode) {
-      var targetUrl = 'https://api.api-ninjas.com/v1/soccermatches?league=' + encodeURIComponent(leagueCode);
-      var reqHeaders = { 'X-Api-Key': NINJAS_API_KEY };
+    function fetchLaligaData() {
+      var targetUrl = 'https://api.api-ninjas.com/v1/soccermatches?league=laliga';
+      var headers = { 'X-Api-Key': NINJAS_API_KEY };
+      var candidates = [
+        { url: targetUrl, hdr: headers },
+        { url: 'https://corsproxy.io/?' + encodeURIComponent(targetUrl), hdr: headers },
+        { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl), hdr: null }
+      ];
 
-      return fetchWithTimeout(targetUrl, reqHeaders, REQUEST_TIMEOUT_MS).catch(function () {
-        var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
-        return fetchWithTimeout(proxyUrl, reqHeaders, REQUEST_TIMEOUT_MS);
-      });
+      var idx = 0;
+      function nextAttempt() {
+        if (idx >= candidates.length) {
+          return Promise.reject(new Error('NETWORK_ERROR'));
+        }
+        var c = candidates[idx++];
+        return fetchJsonWithTimeout(c.url, c.hdr, REQUEST_TIMEOUT_MS).catch(function () {
+          return nextAttempt();
+        });
+      }
+
+      return nextAttempt();
     }
 
-    function loadMatches() {
-      var lg = getLeague(currentLeague);
+    function loadLaliga() {
       var badge = document.getElementById('syncBadge');
       var msg = document.getElementById('msgBox');
 
-      if (!NINJAS_API_KEY) {
-        badge.innerHTML = 'بانتظار المفتاح • 90 ث';
-        msg.style.display = 'block';
-        msg.innerHTML = 'ضع مفتاح <b>NINJAS_API_KEY</b> داخل الكود لتجربة جلب مباريات <b>' + lg.name + '</b> وتحديثها كل 90 ثانية.';
-        renderList();
-        return;
-      }
-
       badge.innerHTML = 'جاري التحديث...';
-      fetchNinjasLeague(lg.code).then(function (parsed) {
-        matchesByLeague[lg.code] = parseNinjasMatches(parsed);
+      fetchLaligaData().then(function (parsed) {
+        laligaMatches = parseNinjasMatches(parsed);
         badge.innerHTML = 'محدّث • كل 90 ث';
-        msg.style.display = matchesByLeague[lg.code].length ? 'none' : 'block';
-        if (!matchesByLeague[lg.code].length) {
-          msg.innerHTML = 'لم يرجع API Ninjas مباريات لبطولة "' + lg.name + '" حالياً.';
+        msg.style.display = laligaMatches.length ? 'none' : 'block';
+        if (!laligaMatches.length) {
+          msg.innerHTML = 'لم يرجع API Ninjas مباريات للدوري الإسباني حالياً.';
         }
         renderList();
       }).catch(function (err) {
-        var reason = err && err.message ? err.message : 'TIMEOUT';
+        var reason = err && err.message ? err.message : 'NETWORK_ERROR';
         badge.innerHTML = reason === 'TIMEOUT' ? 'انتهت المهلة' : 'غير متاح';
         msg.style.display = 'block';
-        if (reason === 'TIMEOUT') {
-          msg.innerHTML = 'انتهت مهلة الاتصال بـ API Ninjas، سيعاد المحاولة كل 90 ثانية.';
-        } else {
-          msg.innerHTML = 'تعذر جلب البيانات من API Ninjas (' + reason + ')، سيعاد المحاولة كل 90 ثانية.';
-        }
+        msg.innerHTML = 'تعذر جلب مباريات الدوري الإسباني (' + reason + ')، سيعاد المحاولة كل 90 ثانية.';
         renderList();
       });
     }
 
     function renderList() {
-      var today = getTodayIso();
-      var lg = getLeague(currentLeague);
-      document.getElementById('todayIso').innerHTML = today;
-      document.getElementById('currentLeagueName').innerHTML = lg.name;
-      document.getElementById('boxTitle').innerHTML = 'مباريات ' + lg.name;
-
-      var list = matchesByLeague[lg.code] || [];
-      if (!list.length) {
-        document.getElementById('matchesList').innerHTML = '<div class="empty">لا توجد مباريات معروضة حالياً لبطولة ' + lg.name + '.</div>';
+      document.getElementById('todayIso').innerHTML = getTodayIso();
+      if (!laligaMatches.length) {
+        document.getElementById('matchesList').innerHTML = '<div class="empty">لا توجد مباريات معروضة حالياً لبطولة الدوري الإسباني.</div>';
         return;
       }
 
       var html = '';
-      for (var i = 0; i < list.length; i++) {
-        var m = list[i];
+      for (var i = 0; i < laligaMatches.length; i++) {
+        var m = laligaMatches[i];
         html += '<div class="row">' +
           '<div class="st ' + (m.isLive ? 'live' : '') + '">' + m.status + '<br><span style="color:#94a3b8">' + (m.sub || '') + '</span></div>' +
           '<div class="tm home">' + m.home + '</div>' +
@@ -276,10 +233,9 @@
       document.getElementById('matchesList').innerHTML = html;
     }
 
-    renderLeagues();
     renderList();
-    loadMatches();
-    setInterval(loadMatches, AUTO_SYNC_MS);
+    loadLaliga();
+    setInterval(loadLaliga, AUTO_SYNC_MS);
   </script>
 </body>
 </html>
