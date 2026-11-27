@@ -386,37 +386,36 @@
       border: 1px solid var(--gold);
       background-color: var(--gold-soft);
       border-radius: 9px;
-      padding: 0.25rem 0.65rem;
-      margin-bottom: 0.45rem;
+      padding: 0.22rem 0.65rem;
+      margin: 0.45rem 0;
     }
 
     .surah-cartouche::before,
     .surah-cartouche::after {
       content: "❖";
       color: var(--gold);
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       margin: 0 0.4rem;
       vertical-align: middle;
     }
 
-    .surah-title {
+    .surah-cartouche-title {
       display: inline;
-      font-size: 1.38rem;
+      font-size: 1.32rem;
       font-weight: 700;
       color: var(--accent);
     }
 
     .basmala-ornament {
       text-align: center;
-      font-size: 1.4rem;
+      font-size: 1.35rem;
       font-weight: 700;
       color: var(--text-main);
-      padding: 0.2rem 0.35rem 0.35rem;
-      margin-bottom: 0.4rem;
+      padding: 0.15rem 0.35rem 0.3rem;
+      margin-bottom: 0.35rem;
       border-bottom: 1px dashed var(--ornament);
     }
 
-    /* خط متناسق ومسافات طبيعية بدون فجوات */
     .mushaf-page-text {
       font-size: 1.42rem;
       line-height: 1.72;
@@ -500,21 +499,6 @@
       border: none;
       padding: 0.3rem 0.7rem;
     }
-
-    .surah-step-bar {
-      margin-top: 0.5rem;
-      display: flex;
-      justify-content: space-between;
-      gap: 0.5rem;
-    }
-
-    .surah-step-bar .btn {
-      background-color: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      padding: 0.24rem 0.6rem;
-      font-size: 0.85rem;
-    }
   </style>
 </head>
 <body>
@@ -547,7 +531,7 @@
     <section class="ayah-search-box" aria-label="البحث في الآيات">
       <div class="ayah-search-row">
         <input id="ayahSearchInput" type="search" placeholder="ابحث في الآيات (مثال: العالمين، الصراط، أحد)..." />
-        <button id="scopeBtn" class="scope-btn" type="button">النطاق: السورة الحالية</button>
+        <button id="scopeBtn" class="scope-btn" type="button">النطاق: الصفحة الحالية</button>
       </div>
       <div id="searchResultsPanel" class="search-results-panel">
         <div class="search-results-header">
@@ -561,16 +545,8 @@
     <article class="mushaf-frame">
       <div class="mushaf-inner-frame">
         <div class="page-header-ornament">
-          <span id="surahMetaTop">سورة الفاتحة • مكية</span>
-          <span id="pageBadgeTop">صفحة ١</span>
-        </div>
-
-        <div class="surah-cartouche">
-          <h1 id="surahTitle" class="surah-title">سورة الفاتحة</h1>
-        </div>
-
-        <div id="basmalaBox" class="basmala-ornament" style="display: none;">
-          بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+          <span id="pageSurahsTop">سورة الفاتحة</span>
+          <span id="pageNumTop">صفحة ١ من ٦٠٤</span>
         </div>
 
         <div id="quranPageText" class="mushaf-page-text"></div>
@@ -582,13 +558,8 @@
 
         <div class="page-nav-bar">
           <button id="prevPageBtn" class="btn" type="button">الصفحة السابقة</button>
-          <span id="pageCounter" class="page-indicator">صفحة ١ من ١</span>
+          <span id="pageCounter" class="page-indicator">صفحة ١ / ٦٠٤</span>
           <button id="nextPageBtn" class="btn" type="button">الصفحة التالية</button>
-        </div>
-
-        <div class="surah-step-bar">
-          <button id="prevSurahBtn" class="btn" type="button">← السورة السابقة</button>
-          <button id="nextSurahBtn" class="btn" type="button">السورة التالية →</button>
         </div>
       </div>
     </article>
@@ -596,165 +567,160 @@
 
   <script>
     const SURAHS_114 = [
-      [1, "سورة الفاتحة", 7, "مكية"],
-      [2, "سورة البقرة", 286, "مدنية"],
-      [3, "سورة آل عمران", 200, "مدنية"],
-      [4, "سورة النساء", 176, "مدنية"],
-      [5, "سورة المائدة", 120, "مدنية"],
-      [6, "سورة الأنعام", 165, "مكية"],
-      [7, "سورة الأعراف", 206, "مكية"],
-      [8, "سورة الأنفال", 75, "مدنية"],
-      [9, "سورة التوبة", 129, "مدنية"],
-      [10, "سورة يونس", 109, "مكية"],
-      [11, "سورة هود", 123, "مكية"],
-      [12, "سورة يوسف", 111, "مكية"],
-      [13, "سورة الرعد", 43, "مدنية"],
-      [14, "سورة إبراهيم", 52, "مكية"],
-      [15, "سورة الحجر", 99, "مكية"],
-      [16, "سورة النحل", 128, "مكية"],
-      [17, "سورة الإسراء", 111, "مكية"],
-      [18, "سورة الكهف", 110, "مكية"],
-      [19, "سورة مريم", 98, "مكية"],
-      [20, "سورة طه", 135, "مكية"],
-      [21, "سورة الأنبياء", 112, "مكية"],
-      [22, "سورة الحج", 78, "مدنية"],
-      [23, "سورة المؤمنون", 118, "مكية"],
-      [24, "سورة النور", 64, "مدنية"],
-      [25, "سورة الفرقان", 77, "مكية"],
-      [26, "سورة الشعراء", 227, "مكية"],
-      [27, "سورة النمل", 93, "مكية"],
-      [28, "سورة القصص", 88, "مكية"],
-      [29, "سورة العنكبوت", 69, "مكية"],
-      [30, "سورة الروم", 60, "مكية"],
-      [31, "سورة لقمان", 34, "مكية"],
-      [32, "سورة السجدة", 30, "مكية"],
-      [33, "سورة الأحزاب", 73, "مدنية"],
-      [34, "سورة سبأ", 54, "مكية"],
-      [35, "سورة فاطر", 45, "مكية"],
-      [36, "سورة يس", 83, "مكية"],
-      [37, "سورة الصافات", 182, "مكية"],
-      [38, "سورة ص", 88, "مكية"],
-      [39, "سورة الزمر", 75, "مكية"],
-      [40, "سورة غافر", 85, "مكية"],
-      [41, "سورة فصلت", 54, "مكية"],
-      [42, "سورة الشورى", 53, "مكية"],
-      [43, "سورة الزخرف", 89, "مكية"],
-      [44, "سورة الدخان", 59, "مكية"],
-      [45, "سورة الجاثية", 37, "مكية"],
-      [46, "سورة الأحقاف", 35, "مكية"],
-      [47, "سورة محمد", 38, "مدنية"],
-      [48, "سورة الفتح", 29, "مدنية"],
-      [49, "سورة الحجرات", 18, "مدنية"],
-      [50, "سورة ق", 45, "مكية"],
-      [51, "سورة الذاريات", 60, "مكية"],
-      [52, "سورة الطور", 49, "مكية"],
-      [53, "سورة النجم", 62, "مكية"],
-      [54, "سورة القمر", 55, "مكية"],
-      [55, "سورة الرحمن", 78, "مدنية"],
-      [56, "سورة الواقعة", 96, "مكية"],
-      [57, "سورة الحديد", 29, "مدنية"],
-      [58, "سورة المجادلة", 22, "مدنية"],
-      [59, "سورة الحشر", 24, "مدنية"],
-      [60, "سورة الممتحنة", 13, "مدنية"],
-      [61, "سورة الصف", 14, "مدنية"],
-      [62, "سورة الجمعة", 11, "مدنية"],
-      [63, "سورة المنافقون", 11, "مدنية"],
-      [64, "سورة التغابن", 18, "مدنية"],
-      [65, "سورة الطلاق", 12, "مدنية"],
-      [66, "سورة التحريم", 12, "مدنية"],
-      [67, "سورة الملك", 30, "مكية"],
-      [68, "سورة القلم", 52, "مكية"],
-      [69, "سورة الحاقة", 52, "مكية"],
-      [70, "سورة المعارج", 44, "مكية"],
-      [71, "سورة نوح", 28, "مكية"],
-      [72, "سورة الجن", 28, "مكية"],
-      [73, "سورة المزمل", 20, "مكية"],
-      [74, "سورة المدثر", 56, "مكية"],
-      [75, "سورة القيامة", 40, "مكية"],
-      [76, "سورة الإنسان", 31, "مدنية"],
-      [77, "سورة المرسلات", 50, "مكية"],
-      [78, "سورة النبأ", 40, "مكية"],
-      [79, "سورة النازعات", 46, "مكية"],
-      [80, "سورة عبس", 42, "مكية"],
-      [81, "سورة التكوير", 29, "مكية"],
-      [82, "سورة الانفطار", 19, "مكية"],
-      [83, "سورة المطففين", 36, "مكية"],
-      [84, "سورة الانشقاق", 25, "مكية"],
-      [85, "سورة البروج", 22, "مكية"],
-      [86, "سورة الطارق", 17, "مكية"],
-      [87, "سورة الأعلى", 19, "مكية"],
-      [88, "سورة الغاشية", 26, "مكية"],
-      [89, "سورة الفجر", 30, "مكية"],
-      [90, "سورة البلد", 20, "مكية"],
-      [91, "سورة الشمس", 15, "مكية"],
-      [92, "سورة الليل", 21, "مكية"],
-      [93, "سورة الضحى", 11, "مكية"],
-      [94, "سورة الشرح", 8, "مكية"],
-      [95, "سورة التين", 8, "مكية"],
-      [96, "سورة العلق", 19, "مكية"],
-      [97, "سورة القدر", 5, "مكية"],
-      [98, "سورة البينة", 8, "مدنية"],
-      [99, "سورة الزلزلة", 8, "مدنية"],
-      [100, "سورة العاديات", 11, "مكية"],
-      [101, "سورة القارعة", 11, "مكية"],
-      [102, "سورة التكاثر", 8, "مكية"],
-      [103, "سورة العصر", 3, "مكية"],
-      [104, "سورة الهمزة", 9, "مكية"],
-      [105, "سورة الفيل", 5, "مكية"],
-      [106, "سورة قريش", 4, "مكية"],
-      [107, "سورة الماعون", 7, "مكية"],
-      [108, "سورة الكوثر", 3, "مكية"],
-      [109, "سورة الكافرون", 6, "مكية"],
-      [110, "سورة النصر", 3, "مدنية"],
-      [111, "سورة المسد", 5, "مكية"],
-      [112, "سورة الإخلاص", 4, "مكية"],
-      [113, "سورة الفلق", 5, "مكية"],
-      [114, "سورة الناس", 6, "مكية"]
+      [1, "سورة الفاتحة", 7, "مكية", 1],
+      [2, "سورة البقرة", 286, "مدنية", 2],
+      [3, "سورة آل عمران", 200, "مدنية", 50],
+      [4, "سورة النساء", 176, "مدنية", 77],
+      [5, "سورة المائدة", 120, "مدنية", 106],
+      [6, "سورة الأنعام", 165, "مكية", 128],
+      [7, "سورة الأعراف", 206, "مكية", 151],
+      [8, "سورة الأنفال", 75, "مدنية", 177],
+      [9, "سورة التوبة", 129, "مدنية", 187],
+      [10, "سورة يونس", 109, "مكية", 208],
+      [11, "سورة هود", 123, "مكية", 221],
+      [12, "سورة يوسف", 111, "مكية", 235],
+      [13, "سورة الرعد", 43, "مدنية", 249],
+      [14, "سورة إبراهيم", 52, "مكية", 255],
+      [15, "سورة الحجر", 99, "مكية", 262],
+      [16, "سورة النحل", 128, "مكية", 267],
+      [17, "سورة الإسراء", 111, "مكية", 282],
+      [18, "سورة الكهف", 110, "مكية", 293],
+      [19, "سورة مريم", 98, "مكية", 305],
+      [20, "سورة طه", 135, "مكية", 312],
+      [21, "سورة الأنبياء", 112, "مكية", 322],
+      [22, "سورة الحج", 78, "مدنية", 332],
+      [23, "سورة المؤمنون", 118, "مكية", 342],
+      [24, "سورة النور", 64, "مدنية", 350],
+      [25, "سورة الفرقان", 77, "مكية", 359],
+      [26, "سورة الشعراء", 227, "مكية", 367],
+      [27, "سورة النمل", 93, "مكية", 377],
+      [28, "سورة القصص", 88, "مكية", 385],
+      [29, "سورة العنكبوت", 69, "مكية", 396],
+      [30, "سورة الروم", 60, "مكية", 404],
+      [31, "سورة لقمان", 34, "مكية", 411],
+      [32, "سورة السجدة", 30, "مكية", 415],
+      [33, "سورة الأحزاب", 73, "مدنية", 418],
+      [34, "سورة سبأ", 54, "مكية", 428],
+      [35, "سورة فاطر", 45, "مكية", 434],
+      [36, "سورة يس", 83, "مكية", 440],
+      [37, "سورة الصافات", 182, "مكية", 446],
+      [38, "سورة ص", 88, "مكية", 453],
+      [39, "سورة الزمر", 75, "مكية", 458],
+      [40, "سورة غافر", 85, "مكية", 467],
+      [41, "سورة فصلت", 54, "مكية", 477],
+      [42, "سورة الشورى", 53, "مكية", 483],
+      [43, "سورة الزخرف", 89, "مكية", 489],
+      [44, "سورة الدخان", 59, "مكية", 496],
+      [45, "سورة الجاثية", 37, "مكية", 499],
+      [46, "سورة الأحقاف", 35, "مكية", 502],
+      [47, "سورة محمد", 38, "مدنية", 507],
+      [48, "سورة الفتح", 29, "مدنية", 511],
+      [49, "سورة الحجرات", 18, "مدنية", 515],
+      [50, "سورة ق", 45, "مكية", 518],
+      [51, "سورة الذاريات", 60, "مكية", 520],
+      [52, "سورة الطور", 49, "مكية", 523],
+      [53, "سورة النجم", 62, "مكية", 526],
+      [54, "سورة القمر", 55, "مكية", 528],
+      [55, "سورة الرحمن", 78, "مدنية", 531],
+      [56, "سورة الواقعة", 96, "مكية", 534],
+      [57, "سورة الحديد", 29, "مدنية", 537],
+      [58, "سورة المجادلة", 22, "مدنية", 542],
+      [59, "سورة الحشر", 24, "مدنية", 545],
+      [60, "سورة الممتحنة", 13, "مدنية", 549],
+      [61, "سورة الصف", 14, "مدنية", 551],
+      [62, "سورة الجمعة", 11, "مدنية", 553],
+      [63, "سورة المنافقون", 11, "مدنية", 554],
+      [64, "سورة التغابن", 18, "مدنية", 556],
+      [65, "سورة الطلاق", 12, "مدنية", 558],
+      [66, "سورة التحريم", 12, "مدنية", 560],
+      [67, "سورة الملك", 30, "مكية", 562],
+      [68, "سورة القلم", 52, "مكية", 564],
+      [69, "سورة الحاقة", 52, "مكية", 566],
+      [70, "سورة المعارج", 44, "مكية", 568],
+      [71, "سورة نوح", 28, "مكية", 570],
+      [72, "سورة الجن", 28, "مكية", 572],
+      [73, "سورة المزمل", 20, "مكية", 574],
+      [74, "سورة المدثر", 56, "مكية", 575],
+      [75, "سورة القيامة", 40, "مكية", 577],
+      [76, "سورة الإنسان", 31, "مدنية", 578],
+      [77, "سورة المرسلات", 50, "مكية", 580],
+      [78, "سورة النبأ", 40, "مكية", 582],
+      [79, "سورة النازعات", 46, "مكية", 583],
+      [80, "سورة عبس", 42, "مكية", 585],
+      [81, "سورة التكوير", 29, "مكية", 586],
+      [82, "سورة الانفطار", 19, "مكية", 587],
+      [83, "سورة المطففين", 36, "مكية", 587],
+      [84, "سورة الانشقاق", 25, "مكية", 589],
+      [85, "سورة البروج", 22, "مكية", 590],
+      [86, "سورة الطارق", 17, "مكية", 591],
+      [87, "سورة الأعلى", 19, "مكية", 591],
+      [88, "سورة الغاشية", 26, "مكية", 592],
+      [89, "سورة الفجر", 30, "مكية", 593],
+      [90, "سورة البلد", 20, "مكية", 594],
+      [91, "سورة الشمس", 15, "مكية", 595],
+      [92, "سورة الليل", 21, "مكية", 595],
+      [93, "سورة الضحى", 11, "مكية", 596],
+      [94, "سورة الشرح", 8, "مكية", 596],
+      [95, "سورة التين", 8, "مكية", 597],
+      [96, "سورة العلق", 19, "مكية", 597],
+      [97, "سورة القدر", 5, "مكية", 598],
+      [98, "سورة البينة", 8, "مدنية", 598],
+      [99, "سورة الزلزلة", 8, "مدنية", 599],
+      [100, "سورة العاديات", 11, "مكية", 599],
+      [101, "سورة القارعة", 11, "مكية", 600],
+      [102, "سورة التكاثر", 8, "مكية", 600],
+      [103, "سورة العصر", 3, "مكية", 601],
+      [104, "سورة الهمزة", 9, "مكية", 601],
+      [105, "سورة الفيل", 5, "مكية", 601],
+      [106, "سورة قريش", 4, "مكية", 602],
+      [107, "سورة الماعون", 7, "مكية", 602],
+      [108, "سورة الكوثر", 3, "مكية", 602],
+      [109, "سورة الكافرون", 6, "مكية", 603],
+      [110, "سورة النصر", 3, "مدنية", 603],
+      [111, "سورة المسد", 5, "مكية", 603],
+      [112, "سورة الإخلاص", 4, "مكية", 604],
+      [113, "سورة الفلق", 5, "مكية", 604],
+      [114, "سورة الناس", 6, "مكية", 604]
     ];
 
-    const FALLBACK_AYAHS = {
-      1: [
-        "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-        "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
-        "الرَّحْمَٰنِ الرَّحِيمِ",
-        "مَالِكِ يَوْمِ الدِّينِ",
-        "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
-        "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
-        "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ"
-      ],
-      112: [
-        "قُلْ هُوَ اللَّهُ أَحَدٌ",
-        "اللَّهُ الصَّمَدُ",
-        "لَمْ يَلِدْ وَلَمْ يُولَدْ",
-        "وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ"
-      ],
-      113: [
-        "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ",
-        "مِنْ شَرِّ مَا خَلَقَ",
-        "وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ",
-        "وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ",
-        "وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ"
-      ],
-      114: [
-        "قُلْ أَعُوذُ بِرَبِّ النَّاسِ",
-        "مَلِكِ النَّاسِ",
-        "إِلَٰهِ النَّاسِ",
-        "مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ",
-        "الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ",
-        "مِنَ الْجِنَّةِ وَالنَّاسِ"
-      ]
-    };
+    const FALLBACK_PAGE_1 = [
+      { surahNumber: 1, surahName: "سورة الفاتحة", numberInSurah: 1, text: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ" },
+      { surahNumber: 1, surahName: "سورة الفاتحة", numberInSurah: 2, text: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ" },
+      { surahNumber: 1, surahName: "سورة الفاتحة", numberInSurah: 3, text: "الرَّحْمَٰنِ الرَّحِيمِ" },
+      { surahNumber: 1, surahName: "سورة الفاتحة", numberInSurah: 4, text: "مَالِكِ يَوْمِ الدِّينِ" },
+      { surahNumber: 1, surahName: "سورة الفاتحة", numberInSurah: 5, text: "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ" },
+      { surahNumber: 1, surahName: "سورة الفاتحة", numberInSurah: 6, text: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ" },
+      { surahNumber: 1, surahName: "سورة الفاتحة", numberInSurah: 7, text: "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ" }
+    ];
+
+    const FALLBACK_PAGE_604 = [
+      { surahNumber: 112, surahName: "سورة الإخلاص", numberInSurah: 1, text: "قُلْ هُوَ اللَّهُ أَحَدٌ" },
+      { surahNumber: 112, surahName: "سورة الإخلاص", numberInSurah: 2, text: "اللَّهُ الصَّمَدُ" },
+      { surahNumber: 112, surahName: "سورة الإخلاص", numberInSurah: 3, text: "لَمْ يَلِدْ وَلَمْ يُولَدْ" },
+      { surahNumber: 112, surahName: "سورة الإخلاص", numberInSurah: 4, text: "وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ" },
+      { surahNumber: 113, surahName: "سورة الفلق", numberInSurah: 1, text: "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ" },
+      { surahNumber: 113, surahName: "سورة الفلق", numberInSurah: 2, text: "مِنْ شَرِّ مَا خَلَقَ" },
+      { surahNumber: 113, surahName: "سورة الفلق", numberInSurah: 3, text: "وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ" },
+      { surahNumber: 113, surahName: "سورة الفلق", numberInSurah: 4, text: "وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ" },
+      { surahNumber: 113, surahName: "سورة الفلق", numberInSurah: 5, text: "وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ" },
+      { surahNumber: 114, surahName: "سورة الناس", numberInSurah: 1, text: "قُلْ أَعُوذُ بِرَبِّ النَّاسِ" },
+      { surahNumber: 114, surahName: "سورة الناس", numberInSurah: 2, text: "مَلِكِ النَّاسِ" },
+      { surahNumber: 114, surahName: "سورة الناس", numberInSurah: 3, text: "إِلَٰهِ النَّاسِ" },
+      { surahNumber: 114, surahName: "سورة الناس", numberInSurah: 4, text: "مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ" },
+      { surahNumber: 114, surahName: "سورة الناس", numberInSurah: 5, text: "الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ" },
+      { surahNumber: 114, surahName: "سورة الناس", numberInSurah: 6, text: "مِنَ الْجِنَّةِ وَالنَّاسِ" }
+    ];
 
     const API_BASE = "https://api.alquran.cloud/v1";
-    const POS_KEY = "quran_pages_ornate_pos_v3";
-    const THEME_KEY = "quran_pages_ornate_theme_v3";
+    const TOTAL_MUSHAF_PAGES = 604;
+    const POS_KEY = "quran_mushaf_604_pos_v1";
+    const THEME_KEY = "quran_mushaf_604_theme_v1";
     const THEME_MODES = ["auto", "light", "dark"];
     const THEME_LABELS = {
       auto: "الوضع: نظام الجهاز",
       light: "الوضع: أبيض",
       dark: "الوضع: أسود"
     };
-    const AYAHS_PER_PAGE = 22;
     const DEFAULT_FONT_REM = 1.42;
 
     const sideDrawer = document.getElementById("sideDrawer");
@@ -774,28 +740,30 @@
     const resumeBtn = document.getElementById("resumeBtn");
     const themeBtn = document.getElementById("themeBtn");
     const fontBtn = document.getElementById("fontBtn");
-    const surahMetaTop = document.getElementById("surahMetaTop");
-    const pageBadgeTop = document.getElementById("pageBadgeTop");
-    const surahTitle = document.getElementById("surahTitle");
-    const basmalaBox = document.getElementById("basmalaBox");
+    const pageSurahsTop = document.getElementById("pageSurahsTop");
+    const pageNumTop = document.getElementById("pageNumTop");
     const quranPageText = document.getElementById("quranPageText");
     const tafsirLabel = document.getElementById("tafsirLabel");
     const tafsirContent = document.getElementById("tafsirContent");
     const pageCounter = document.getElementById("pageCounter");
     const prevPageBtn = document.getElementById("prevPageBtn");
     const nextPageBtn = document.getElementById("nextPageBtn");
-    const prevSurahBtn = document.getElementById("prevSurahBtn");
-    const nextSurahBtn = document.getElementById("nextSurahBtn");
 
-    let currentSurah = 1;
-    let currentAyahs = [];
-    let currentTafsir = [];
-    let isOnlineSurahLoaded = false;
     let currentPage = 1;
+    let currentPageAyahs = [];
+    let currentPageTafsir = [];
+    let isOnlinePageLoaded = false;
+    let selectedKey = "";
     let fontRem = DEFAULT_FONT_REM;
     let themeIndex = 0;
     let searchAllQuran = false;
     let searchTimer = null;
+
+    function scrollToTopNow() {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
 
     function toAr(n) {
       return String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
@@ -864,26 +832,36 @@
       drawerBackdrop.classList.remove("open");
     }
 
+    function getSurahAtPage(pageNum) {
+      let active = SURAHS_114[0];
+      for (const s of SURAHS_114) {
+        if (s[4] <= pageNum) active = s;
+        else break;
+      }
+      return active[0];
+    }
+
     function renderSurahList(filter = "") {
       const q = filter.trim();
+      const activeSurahNum = getSurahAtPage(currentPage);
       surahList.innerHTML = "";
       SURAHS_114
         .filter(([, name]) => !q || name.includes(q))
-        .forEach(([num, name, count]) => {
+        .forEach(([num, name, count, , startPage]) => {
           const li = document.createElement("li");
-          li.className = "surah-item" + (num === currentSurah ? " active" : "");
-          li.innerHTML = `<span>${toAr(num)}. ${name}</span><span class="surah-item-meta">${toAr(count)} آية</span>`;
+          li.className = "surah-item" + (num === activeSurahNum ? " active" : "");
+          li.innerHTML = `<span>${toAr(num)}. ${name}</span><span class="surah-item-meta">ص ${toAr(startPage)}</span>`;
           li.addEventListener("click", () => {
             closeDrawer();
-            loadSurah(num, 1, 1);
+            loadMushafPage(startPage, `${num}:1`, true);
           });
           surahList.appendChild(li);
         });
     }
 
-    function savePos(surah, ayah, page) {
+    function savePos(page, surah, ayah) {
       try {
-        localStorage.setItem(POS_KEY, JSON.stringify({ surah, ayah, page }));
+        localStorage.setItem(POS_KEY, JSON.stringify({ page, surah, ayah }));
       } catch (e) {}
     }
 
@@ -896,50 +874,76 @@
       }
     }
 
-    function buildFallback(num, count) {
-      if (FALLBACK_AYAHS[num]) {
-        return FALLBACK_AYAHS[num].map((text, i) => ({ numberInSurah: i + 1, text }));
-      }
-      return Array.from({ length: count }, (_, i) => ({
-        numberInSurah: i + 1,
-        text: `الآية (${toAr(i + 1)}) — فعّل الإنترنت لتحميل النص الكامل للسورة.`
-      }));
+    function buildFallbackPage(pageNum) {
+      if (pageNum === 1) return FALLBACK_PAGE_1;
+      if (pageNum === 604) return FALLBACK_PAGE_604;
+      const sNum = getSurahAtPage(pageNum);
+      const info = SURAHS_114.find(([n]) => n === sNum) || SURAHS_114[0];
+      return [
+        {
+          surahNumber: info[0],
+          surahName: info[1],
+          numberInSurah: 1,
+          text: `صفحة (${toAr(pageNum)}) من المصحف — فعّل الإنترنت لتحميل آيات هذه الصفحة بدقة.`
+        }
+      ];
     }
 
-    function getTotalPages() {
-      return Math.max(1, Math.ceil(currentAyahs.length / AYAHS_PER_PAGE));
+    function makeSurahCartouche(surahName) {
+      const box = document.createElement("div");
+      box.className = "surah-cartouche";
+      const h = document.createElement("div");
+      h.className = "surah-cartouche-title";
+      h.textContent = surahName;
+      box.appendChild(h);
+      return box;
     }
 
-    function renderCurrentPage(targetAyah = null) {
-      const totalPages = getTotalPages();
-      currentPage = Math.min(Math.max(1, Number(currentPage) || 1), totalPages);
+    function makeBasmalaBox() {
+      const b = document.createElement("div");
+      b.className = "basmala-ornament";
+      b.textContent = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
+      return b;
+    }
 
-      const startIdx = (currentPage - 1) * AYAHS_PER_PAGE;
-      const pageAyahs = currentAyahs.slice(startIdx, startIdx + AYAHS_PER_PAGE);
+    function renderPageContent(ayahs, tafsirList, targetKey = null) {
+      currentPageAyahs = ayahs;
+      currentPageTafsir = tafsirList || [];
 
-      const info = SURAHS_114.find(([n]) => n === currentSurah) || SURAHS_114[0];
-      surahMetaTop.textContent = `${info[1]} • ${info[3]} • ${toAr(info[2])} آية`;
-      pageBadgeTop.textContent = `صفحة ${toAr(currentPage)}`;
-      pageCounter.textContent = `صفحة ${toAr(currentPage)} من ${toAr(totalPages)}`;
-      basmalaBox.style.display = currentSurah !== 1 && currentSurah !== 9 && currentPage === 1 ? "block" : "none";
+      const uniqueSurahs = [];
+      ayahs.forEach((a) => {
+        if (!uniqueSurahs.includes(a.surahName)) uniqueSurahs.push(a.surahName);
+      });
 
+      pageSurahsTop.textContent = uniqueSurahs.join(" • ") || "المصحف الشريف";
+      pageNumTop.textContent = `صفحة ${toAr(currentPage)} من ${toAr(TOTAL_MUSHAF_PAGES)}`;
+      pageCounter.textContent = `صفحة ${toAr(currentPage)} / ${toAr(TOTAL_MUSHAF_PAGES)}`;
       prevPageBtn.disabled = currentPage <= 1;
-      nextPageBtn.disabled = currentPage >= totalPages;
+      nextPageBtn.disabled = currentPage >= TOTAL_MUSHAF_PAGES;
 
       quranPageText.innerHTML = "";
-      pageAyahs.forEach((ayah) => {
-        const span = document.createElement("span");
-        span.className = "ayah-span";
-        span.dataset.ayah = ayah.numberInSurah;
+
+      ayahs.forEach((ayah) => {
+        if (ayah.numberInSurah === 1) {
+          quranPageText.appendChild(makeSurahCartouche(ayah.surahName));
+          if (ayah.surahNumber !== 1 && ayah.surahNumber !== 9) {
+            quranPageText.appendChild(makeBasmalaBox());
+          }
+        }
 
         let txt = ayah.text;
         if (
-          currentSurah !== 1 &&
+          ayah.surahNumber !== 1 &&
           ayah.numberInSurah === 1 &&
           txt.startsWith("بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ")
         ) {
           txt = txt.replace("بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ", "");
         }
+
+        const key = `${ayah.surahNumber}:${ayah.numberInSurah}`;
+        const span = document.createElement("span");
+        span.className = "ayah-span";
+        span.dataset.key = key;
 
         const badge = document.createElement("span");
         badge.className = "ayah-rosace";
@@ -947,33 +951,39 @@
 
         span.textContent = txt;
         span.appendChild(badge);
-        span.addEventListener("click", () => selectAyah(ayah.numberInSurah));
+        span.addEventListener("click", () => selectAyah(ayah.surahNumber, ayah.numberInSurah));
 
         quranPageText.appendChild(span);
         quranPageText.appendChild(document.createTextNode(" "));
       });
 
-      const ayahToSelect =
-        targetAyah && pageAyahs.some((a) => a.numberInSurah === Number(targetAyah))
-          ? Number(targetAyah)
-          : pageAyahs[0]
-          ? pageAyahs[0].numberInSurah
-          : 1;
+      const firstKey = ayahs[0] ? `${ayahs[0].surahNumber}:${ayahs[0].numberInSurah}` : "1:1";
+      const chosenKey =
+        targetKey && ayahs.some((a) => `${a.surahNumber}:${a.numberInSurah}` === targetKey)
+          ? targetKey
+          : firstKey;
 
-      selectAyah(ayahToSelect);
+      const [sPart, aPart] = chosenKey.split(":");
+      selectAyah(Number(sPart), Number(aPart));
     }
 
-    function selectAyah(ayahNum) {
-      const target = Number(ayahNum);
+    function selectAyah(surahNum, ayahNum) {
+      const key = `${surahNum}:${ayahNum}`;
+      selectedKey = key;
 
       quranPageText.querySelectorAll(".ayah-span").forEach((el) => {
-        el.classList.toggle("active", Number(el.dataset.ayah) === target);
+        el.classList.toggle("active", el.dataset.key === key);
       });
 
-      const found = currentTafsir.find((a) => a.numberInSurah === target);
-      tafsirLabel.textContent = `آية (${toAr(target)}): `;
-      tafsirContent.textContent = found ? found.text : "تم تحديد موضع القراءة وحفظه تلقائياً.";
-      savePos(currentSurah, target, currentPage);
+      const foundTafsir = currentPageTafsir.find(
+        (t) => t.surah && t.surah.number === Number(surahNum) && t.numberInSurah === Number(ayahNum)
+      );
+      const sInfo = SURAHS_114.find(([n]) => n === Number(surahNum));
+      const sName = sInfo ? sInfo[1] : "";
+
+      tafsirLabel.textContent = `${sName} • آية (${toAr(ayahNum)}): `;
+      tafsirContent.textContent = foundTafsir ? foundTafsir.text : "تم تحديد موضع القراءة وحفظه تلقائياً.";
+      savePos(currentPage, Number(surahNum), Number(ayahNum));
     }
 
     function renderSearchMatches(matches, query, note = "") {
@@ -993,7 +1003,8 @@
 
         const meta = document.createElement("div");
         meta.className = "result-ayah-meta";
-        meta.textContent = `${item.surahName} • آية (${toAr(item.ayahNumber)})`;
+        const pTxt = item.page ? ` • صفحة ${toAr(item.page)}` : "";
+        meta.textContent = `${item.surahName} • آية (${toAr(item.ayahNumber)})${pTxt}`;
 
         const body = document.createElement("div");
         body.className = "result-ayah-text";
@@ -1003,12 +1014,12 @@
         card.appendChild(body);
 
         card.addEventListener("click", async () => {
-          const destPage = Math.max(1, Math.ceil(item.ayahNumber / AYAHS_PER_PAGE));
-          if (item.surahNumber !== currentSurah) {
-            await loadSurah(item.surahNumber, item.ayahNumber, destPage);
+          const destPage = item.page || currentPage;
+          const destKey = `${item.surahNumber}:${item.ayahNumber}`;
+          if (destPage !== currentPage) {
+            await loadMushafPage(destPage, destKey, true);
           } else {
-            currentPage = destPage;
-            renderCurrentPage(item.ayahNumber);
+            selectAyah(item.surahNumber, item.ayahNumber);
           }
         });
 
@@ -1025,30 +1036,30 @@
       }
 
       const normQ = normalizeArabic(q);
-      const surahInfo = SURAHS_114.find(([n]) => n === currentSurah) || SURAHS_114[0];
 
-      const localMatches = currentAyahs
+      const pageMatches = currentPageAyahs
         .filter((a) => {
           if (a.text.includes(q)) return true;
           const normAyah = normalizeArabic(a.text);
           return normQ && normAyah.includes(normQ);
         })
         .map((a) => ({
-          surahNumber: currentSurah,
-          surahName: surahInfo[1],
+          surahNumber: a.surahNumber,
+          surahName: a.surahName,
           ayahNumber: a.numberInSurah,
+          page: currentPage,
           text: a.text
         }));
 
       const offlineNotice =
-        !isOnlineSurahLoaded && !localMatches.length && currentSurah !== 1 && currentSurah < 112
-          ? "النص الكامل للسورة غير محمّل بدون إنترنت؛ فعّل الإنترنت أو غيّر النطاق إلى كل المصحف."
+        !isOnlinePageLoaded && !pageMatches.length && currentPage !== 1 && currentPage !== 604
+          ? "آيات هذه الصفحة غير محمّلة بدون إنترنت؛ فعّل الإنترنت أو غيّر النطاق إلى كل المصحف."
           : "";
 
-      renderSearchMatches(localMatches, q, offlineNotice);
+      renderSearchMatches(pageMatches, q, offlineNotice);
 
       if (searchAllQuran) {
-        searchStatusText.textContent = "جاري البحث في جميع سور القرآن...";
+        searchStatusText.textContent = "جاري البحث في جميع صفحات المصحف...";
         try {
           const ctrl = new AbortController();
           const timer = setTimeout(() => ctrl.abort(), 8000);
@@ -1063,122 +1074,20 @@
               surahNumber: m.surah.number,
               surahName: m.surah.name,
               ayahNumber: m.numberInSurah,
+              page: m.page || null,
               text: m.text
             }));
             renderSearchMatches(apiMatches, q);
           }
         } catch (e) {
-          renderSearchMatches(localMatches, q, "تعذر البحث في كامل المصحف؛ تحقق من الاتصال بالإنترنت.");
+          renderSearchMatches(pageMatches, q, "تعذر البحث في كامل المصحف؛ تحقق من الاتصال بالإنترنت.");
         }
       }
     }
 
-    async function loadSurah(surahNum, targetAyah = 1, targetPage = 1) {
-      const info = SURAHS_114.find(([n]) => n === Number(surahNum)) || SURAHS_114[0];
-      const [num, name, count] = info;
+    async function loadMushafPage(pageNum, targetKey = null, shouldScrollTop = false) {
+      const clampedPage = Math.min(Math.max(1, Number(pageNum) || 1), TOTAL_MUSHAF_PAGES);
+      currentPage = clampedPage;
+      isOnlinePageLoaded = false;
 
-      currentSurah = num;
-      surahTitle.textContent = name;
-      prevSurahBtn.disabled = num <= 1;
-      nextSurahBtn.disabled = num >= 114;
-
-      renderSurahList(surahFilterInput.value);
-      currentTafsir = [];
-      isOnlineSurahLoaded = false;
-      currentAyahs = buildFallback(num, count);
-      currentPage = targetPage || Math.max(1, Math.ceil(targetAyah / AYAHS_PER_PAGE));
-      renderCurrentPage(targetAyah);
-
-      try {
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 7000);
-        const [tRes, fRes] = await Promise.all([
-          fetch(`${API_BASE}/surah/${num}/quran-uthmani`, { signal: ctrl.signal }),
-          fetch(`${API_BASE}/surah/${num}/ar.muyassar`, { signal: ctrl.signal })
-        ]);
-        clearTimeout(timer);
-
-        const [tJson, fJson] = await Promise.all([tRes.json(), fRes.json()]);
-        if (tJson.code === 200 && tJson.data && Array.isArray(tJson.data.ayahs)) {
-          isOnlineSurahLoaded = true;
-          currentAyahs = tJson.data.ayahs;
-          currentTafsir = (fJson.code === 200 && fJson.data && fJson.data.ayahs) || [];
-          currentPage = targetPage || Math.max(1, Math.ceil(targetAyah / AYAHS_PER_PAGE));
-          renderCurrentPage(targetAyah);
-          if (ayahSearchInput.value.trim()) runAyahSearch();
-        }
-      } catch (e) {}
-    }
-
-    openDrawerBtn.addEventListener("click", openDrawer);
-    closeDrawerBtn.addEventListener("click", closeDrawer);
-    drawerBackdrop.addEventListener("click", closeDrawer);
-    surahFilterInput.addEventListener("input", (e) => renderSurahList(e.target.value));
-
-    ayahSearchInput.addEventListener("input", () => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(runAyahSearch, 200);
-    });
-
-    scopeBtn.addEventListener("click", () => {
-      searchAllQuran = !searchAllQuran;
-      scopeBtn.textContent = searchAllQuran ? "النطاق: كل المصحف" : "النطاق: السورة الحالية";
-      if (ayahSearchInput.value.trim()) runAyahSearch();
-    });
-
-    clearSearchBtn.addEventListener("click", () => {
-      searchResultsPanel.classList.remove("open");
-    });
-
-    themeBtn.addEventListener("click", () => {
-      themeIndex = (themeIndex + 1) % THEME_MODES.length;
-      applyTheme(THEME_MODES[themeIndex]);
-    });
-
-    fontBtn.addEventListener("click", () => {
-      fontRem = fontRem >= 2.08 ? 1.24 : Number((fontRem + 0.18).toFixed(2));
-      quranPageText.style.fontSize = `${fontRem}rem`;
-      fontBtn.textContent = fontRem >= 2.08 ? "تصغير الخط" : "تكبير الخط";
-    });
-
-    resumeBtn.addEventListener("click", () => {
-      const saved = getPos();
-      loadSurah(
-        saved && saved.surah ? saved.surah : 1,
-        saved && saved.ayah ? saved.ayah : 1,
-        saved && saved.page ? saved.page : 1
-      );
-    });
-
-    prevPageBtn.addEventListener("click", () => {
-      if (currentPage > 1) {
-        currentPage -= 1;
-        renderCurrentPage();
-      }
-    });
-
-    nextPageBtn.addEventListener("click", () => {
-      if (currentPage < getTotalPages()) {
-        currentPage += 1;
-        renderCurrentPage();
-      }
-    });
-
-    prevSurahBtn.addEventListener("click", () => {
-      if (currentSurah > 1) loadSurah(currentSurah - 1, 1, 1);
-    });
-
-    nextSurahBtn.addEventListener("click", () => {
-      if (currentSurah < 114) loadSurah(currentSurah + 1, 1, 1);
-    });
-
-    initTheme();
-    const initial = getPos();
-    loadSurah(
-      initial && initial.surah ? initial.surah : 1,
-      initial && initial.ayah ? initial.ayah : 1,
-      initial && initial.page ? initial.page : 1
-    );
-  </script>
-</body>
-</html>
+      render
