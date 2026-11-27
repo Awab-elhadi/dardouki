@@ -58,6 +58,7 @@
     .center-score{background:#f8fafc;border:1px solid var(--line);padding:4px 9px;border-radius:6px;font-weight:900;font-size:12px;min-width:58px;text-align:center}
     .act-col{text-align:left}
     .mini-btn{background:#fff;border:1px solid var(--line);color:var(--txt);padding:4px 8px;border-radius:6px;font-size:10px;font-weight:800}
+    .jump-btn{margin-top:10px;background:var(--acc);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:800}
 
     .stand-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:10px;overflow-x:auto}
     table{width:100%;border-collapse:collapse;font-size:11px;min-width:540px}
@@ -346,6 +347,17 @@
       renderAll();
     }
 
+    function findNearestAvailableDate() {
+      var allMatches = matchesByLeague[currentLeague] || [];
+      if (!allMatches.length) return;
+      for (var i = 0; i < allMatches.length; i++) {
+        if (allMatches[i].date) {
+          pickDate(allMatches[i].date);
+          return;
+        }
+      }
+    }
+
     function switchTab(tab) {
       currentTab = tab;
       document.getElementById('btnMatches').className = 'm-tab' + (tab === 'matches' ? ' active' : '');
@@ -546,7 +558,7 @@
           } else {
             st.innerHTML = 'غير متاح';
             notice.style.display = 'block';
-            notice.innerHTML = 'لم تتوفر بيانات حية لبطولة "' + lg.name + '" من المصدر حالياً' + (tsErrs.length ? ' (' + tsErrs.join(' | ') + ')' : '') + '.';
+            notice.innerHTML = 'تعذر الوصول لمصدر "' + lg.name + '" من هذا الجهاز حالياً (' + tsErrs.join(' | ') + ').';
           }
           renderAll();
         }
@@ -815,7 +827,13 @@
       }
 
       if (!filtered.length) {
-        view.innerHTML = '<div class="comp-block"><div style="padding:18px;text-align:center;color:#64748b;font-size:12px">لا توجد مباريات في تاريخ ' + selectedDate + ' للفلتر أو البطولة المحددة</div></div>';
+        var jumpHtml = allMatches.length > 0
+          ? '<div><button type="button" class="jump-btn" onclick="findNearestAvailableDate()">الانتقال لأقرب يوم فيه مباريات</button></div>'
+          : '';
+        view.innerHTML = '<div class="comp-block"><div style="padding:18px;text-align:center;color:#64748b;font-size:12px">' +
+          'لا توجد مباريات في تاريخ ' + selectedDate + ' للفلتر أو البطولة المحددة' +
+          jumpHtml +
+        '</div></div>';
         return;
       }
 
@@ -838,15 +856,4 @@
 
       view.innerHTML = '<div class="comp-block">' +
         '<div class="comp-head"><div><div class="comp-title">' + lg.name + '</div><div class="comp-sub">' + lg.country + '</div></div><div class="comp-sub">' + selectedDate + '</div></div>' +
-        rowsHtml +
-      '</div>';
-    }
-
-    renderDaysStrip();
-    renderLeagues();
-    renderAll();
-    syncLeague();
-    setInterval(syncLeague, AUTO_SYNC_MS);
-  </script>
-</body>
-</html>
+        
